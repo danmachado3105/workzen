@@ -5,22 +5,30 @@ from app.clients.model import Client
 from app.clients.schema import ClientCreate, ClientUpdate
 
 
-def create_client(db: Session, data: ClientCreate) -> Client:
-    client = Client(**data.model_dump())
+def create_client(db: Session, data: ClientCreate, user_id: int) -> Client:
+    client = Client(**data.model_dump(), user_id=user_id)
     db.add(client)
     db.commit()
     db.refresh(client)
     return client
 
 
-def list_clients(db: Session) -> list[Client]:
-    return db.query(Client).filter(Client.is_active == True).all()
+def list_clients(db: Session, user_id: int) -> list[Client]:
+    return (
+        db.query(Client)
+        .filter(Client.is_active == True, Client.user_id == user_id)
+        .all()
+    )
 
 
-def get_client(db: Session, client_id: int) -> Client:
+def get_client(db: Session, client_id: int, user_id: int) -> Client:
     client = (
         db.query(Client)
-        .filter(Client.id == client_id, Client.is_active == True)
+        .filter(
+            Client.id == client_id,
+            Client.user_id == user_id,
+            Client.is_active == True,
+        )
         .first()
     )
     if not client:
@@ -31,8 +39,8 @@ def get_client(db: Session, client_id: int) -> Client:
     return client
 
 
-def update_client(db: Session, client_id: int, data: ClientUpdate) -> Client:
-    client = get_client(db, client_id)
+def update_client(db: Session, client_id: int, data: ClientUpdate, user_id: int) -> Client:
+    client = get_client(db, client_id, user_id)
     updates = data.model_dump(exclude_unset=True)
     for field, value in updates.items():
         setattr(client, field, value)
@@ -41,7 +49,7 @@ def update_client(db: Session, client_id: int, data: ClientUpdate) -> Client:
     return client
 
 
-def delete_client(db: Session, client_id: int) -> None:
-    client = get_client(db, client_id)
+def delete_client(db: Session, client_id: int, user_id: int) -> None:
+    client = get_client(db, client_id, user_id)
     client.is_active = False
     db.commit()
