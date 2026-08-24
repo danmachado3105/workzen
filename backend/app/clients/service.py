@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 from app.clients.model import Client
 from app.clients.schema import ClientCreate, ClientUpdate
@@ -24,7 +24,10 @@ def get_client(db: Session, client_id: int) -> Client:
         .first()
     )
     if not client:
-        raise HTTPException(status_code=404, detail="Cliente não encontrado")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Cliente não encontrado",
+        )
     return client
 
 
