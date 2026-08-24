@@ -6,6 +6,7 @@ from sqlalchemy import engine_from_config, pool
 from app.config import settings
 from app.database import Base
 from app.clients.model import Client  # noqa: F401
+from app.auth.model import User  # noqa: F401
 
 # Aqui, no futuro, vamos importar os models (User, Client, Service...)
 # para que o Alembic consiga "ver" as tabelas e gerar migrations automaticamente.
