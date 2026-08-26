@@ -29,7 +29,7 @@ def test_dashboard_summary_counts_active_clients_and_services(client, auth_heade
     assert data["active_services"] == 2
 
 
-def test_dashboard_counts_appointments_by_status(client, auth_headers):
+def test_dashboard_counts_appointments_by_status(client, auth_headers, db_session):
     headers = auth_headers(email="dash2@teste.com", name="Dash2")
     client_resp, service_resp = _create_client_and_service(client, headers)
 
@@ -47,6 +47,8 @@ def test_dashboard_counts_appointments_by_status(client, auth_headers):
     ).json()
 
     # 1 agendamento que será marcado como "completed"
+    # OBS: hoje não existe rota de API para essa transição (só existe /cancel).
+    # Simulamos isso direto no banco de teste até essa rota ser implementada.
     a2 = client.post(
         "/appointments/",
         json={
@@ -56,7 +58,10 @@ def test_dashboard_counts_appointments_by_status(client, auth_headers):
         },
         headers=headers,
     ).json()
-    client.put(f"/appointments/{a2['id']}", json={"status": "completed"}, headers=headers)
+    from app.appointments.model import Appointment
+    appointment_in_db = db_session.query(Appointment).filter(Appointment.id == a2["id"]).first()
+    appointment_in_db.status = "completed"
+    db_session.commit()
 
     # 1 agendamento que será cancelado
     a3 = client.post(

@@ -188,3 +188,106 @@ def test_amount_charged_is_independent_from_current_service_price(client, auth_h
     # o agendamento antigo deve manter o valor histórico
     response = client.get(f"/appointments/{created['id']}", headers=headers)
     assert response.json()["amount_charged"] == "100.00"
+
+def test_put_cannot_alter_status(client, auth_headers):
+    headers = auth_headers(email="statusput@teste.com", name="StatusPut")
+    client_resp, service_resp = _create_client_and_service(
+        client, headers, "Cliente StatusPut", "Serviço StatusPut"
+    )
+    created = client.post(
+        "/appointments/",
+        json={
+            "client_id": client_resp["id"],
+            "service_id": service_resp["id"],
+            "scheduled_at": _future_datetime(),
+        },
+        headers=headers,
+    ).json()
+
+    response = client.put(
+        f"/appointments/{created['id']}",
+        json={"status": "completed"},
+        headers=headers,
+    )
+    assert response.status_code == 200
+    # o campo "status" enviado é ignorado; o agendamento continua "scheduled"
+    assert response.json()["status"] == "scheduled"
+
+
+def test_put_cannot_revert_canceled_appointment(client, auth_headers):
+    headers = auth_headers(email="revertcancel@teste.com", name="RevertCancel")
+    client_resp, service_resp = _create_client_and_service(
+        client, headers, "Cliente RevertCancel", "Serviço RevertCancel"
+    )
+    created = client.post(
+        "/appointments/",
+        json={
+            "client_id": client_resp["id"],
+            "service_id": service_resp["id"],
+            "scheduled_at": _future_datetime(),
+        },
+        headers=headers,
+    ).json()
+
+    client.post(f"/appointments/{created['id']}/cancel", headers=headers)
+
+    # tenta reverter via PUT enviando status "scheduled" — deve ser ignorado
+    response = client.put(
+        f"/appointments/{created['id']}",
+        json={"status": "scheduled", "payment_status": "paid"},
+        headers=headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "canceled"
+    assert data["payment_status"] == "paid"
+
+
+def test_cancel_route_still_transitions_scheduled_to_canceled(client, auth_headers):
+    headers = auth_headers(email="cancelroute@teste.com", name="CancelRoute")
+    client_resp, service_resp = _create_client_and_service(
+        client, headers, "Cliente CancelRoute", "Serviço CancelRoute"
+    )
+    created = client.post(
+        "/appointments/",
+        json={
+            "client_id": client_resp["id"],
+            "service_id": service_resp["id"],
+            "scheduled_at": _future_datetime(),
+        },
+        headers=headers,
+    ).json()
+    assert created["status"] == "scheduled"
+
+    response = client.post(f"/appointments/{created['id']}/cancel", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["status"] == "canceled"
+
+
+def test_canceling_already_canceled_appointment_is_currently_idempotent(client, auth_headers):
+    """
+    NOTA: o código atual não bloqueia cancelar um appointment já cancelado —
+    a rota simplesmente mantém o status como "canceled" (operação idempotente).
+    Esse teste documenta o comportamento atual; não implementa uma regra nova.
+    """
+    headers = auth_headers(email="doublecancel@teste.com", name="DoubleCancel")
+    client_resp, service_resp = _create_client_and_service(
+        client, headers, "Cliente DoubleCancel", "Serviço DoubleCancel"
+    )
+    created = client.post(
+        "/appointments/",
+        json={
+            "client_id": client_resp["id"],
+            "service_id": service_resp["id"],
+            "scheduled_at": _future_datetime(),
+        },
+        headers=headers,
+    ).json()
+
+    first_cancel = client.post(f"/appointments/{created['id']}/cancel", headers=headers)
+    assert first_cancel.status_code == 200
+    assert first_cancel.json()["status"] == "canceled"
+
+    second_cancel = client.post(f"/appointments/{created['id']}/cancel", headers=headers)
+    assert second_cancel.status_code == 200
+    assert second_cancel.json()["status"] == "canceled"

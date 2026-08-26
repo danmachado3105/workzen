@@ -17,7 +17,6 @@ class AppointmentCreate(BaseModel):
 
 class AppointmentUpdate(BaseModel):
     scheduled_at: Optional[datetime] = None
-    status: Optional[AppointmentStatus] = None
     payment_status: Optional[PaymentStatus] = None
     amount_charged: Optional[Decimal] = Field(default=None, gt=0)
 
