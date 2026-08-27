@@ -4,6 +4,7 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ClientsPage } from "./pages/ClientsPage";
 import { ServicesPage } from "./pages/ServicesPage";
+import { AppointmentsPage } from "./pages/AppointmentsPage";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { AppLayout } from "./components/layout/AppLayout";
 
@@ -38,6 +39,16 @@ function App() {
           <ProtectedRoute>
             <AppLayout>
               <ServicesPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/appointments"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <AppointmentsPage />
             </AppLayout>
           </ProtectedRoute>
         }

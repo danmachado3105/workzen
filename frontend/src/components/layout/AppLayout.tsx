@@ -28,9 +28,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
           >
             Serviços
           </NavLink>
-          <span className="app-nav-link disabled" title="Em breve">
+          <NavLink
+            to="/appointments"
+            className={({ isActive }) => (isActive ? "app-nav-link active" : "app-nav-link")}
+          >
             Agendamentos
-          </span>
+          </NavLink>
         </nav>
         <div className="app-header-right">
           <span className="app-user-email">{user?.email}</span>
