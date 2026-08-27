@@ -1,32 +1,183 @@
-# React + TypeScript + Vite
+# WorkZen
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+> Sistema de gestão e agendamento para prestadores de serviços.
 
-Currently, two official plugins are available:
+O **WorkZen** é uma aplicação SaaS em desenvolvimento com o objetivo de facilitar a gestão de clientes, serviços e agendamentos para profissionais que trabalham com atendimento por horário.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+O projeto está sendo desenvolvido como uma aplicação completa, com **backend, frontend, banco de dados, autenticação e infraestrutura**, seguindo uma arquitetura organizada e preparada para evolução.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚧 Status do projeto
 
-## Expanding the Oxlint configuration
+**Em desenvolvimento — MVP funcional**
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+A estrutura principal do sistema já está implementada e funcionando de ponta a ponta.
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+### Progresso geral
+
+- [x] Estrutura inicial do projeto
+- [x] Backend
+- [x] Banco de dados
+- [x] Migrations
+- [x] Autenticação JWT
+- [x] API de clientes
+- [x] API de serviços
+- [x] API de agendamentos
+- [x] Dashboard
+- [x] Frontend React + TypeScript
+- [x] Login
+- [x] Cadastro
+- [x] Proteção de rotas
+- [x] CRUD de clientes
+- [x] CRUD de serviços
+- [x] Gerenciamento de agendamentos
+- [x] Integração frontend ↔ backend
+- [x] Validações de entrada
+- [x] CORS
+- [x] Dependências com versões fixadas
+- [x] Revisão técnica do backend
+- [ ] Polimento visual do frontend
+- [ ] Melhorias de UX
+- [ ] Revisão de responsividade
+- [ ] Testes finais do frontend
+- [ ] Preparação para produção
+- [ ] Deploy
+- [ ] Publicação do MVP
+
+---
+
+# 🏗️ Stack
+
+## Backend
+
+- Python
+- FastAPI
+- SQLAlchemy
+- Alembic
+- PostgreSQL
+- JWT
+- Docker
+- Docker Compose
+- Pytest
+
+## Frontend
+
+- React
+- TypeScript
+- Vite
+- React Router
+- CSS
+
+---
+
+# 📁 Estrutura
+
+```text
+WORKZEN/
+│
+├── backend/
+│   ├── app/
+│   │   ├── appointments/
+│   │   ├── clients/
+│   │   ├── services/
+│   │   ├── auth/
+│   │   ├── dashboard/
+│   │   ├── config.py
+│   │   ├── database.py
+│   │   └── main.py
+│   │
+│   ├── tests/
+│   ├── alembic/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── alembic.ini
+│
+├── frontend/
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── pages/
+│   │   ├── types/
+│   │   ├── assets/
+│   │   ├── App.tsx
+│   │   ├── App.css
+│   │   ├── index.css
+│   │   └── main.tsx
+│   │
+│   ├── public/
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── docker-compose.yml
+├── .gitignore
+└── README.md
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+---
+
+# ⚙️ Backend
+
+O backend é responsável pela API, autenticação, regras de negócio e persistência dos dados.
+
+### Principais módulos
+
+### Authentication
+
+Sistema de autenticação utilizando JWT.
+
+Fluxo atual:
+
+```text
+Cadastro
+   ↓
+Login
+   ↓
+JWT
+   ↓
+Frontend
+   ↓
+Authorization: Bearer <token>
+```
+
+### Clients
+
+Gerenciamento de clientes vinculados ao usuário autenticado.
+
+Operações principais:
+
+- Listar
+- Criar
+- Atualizar
+- Desativar
+
+### Services
+
+Gerenciamento dos serviços oferecidos pelo prestador.
+
+Informações principais:
+
+- Nome
+- Preço
+- Duração
+- Status
+
+### Appointments
+
+Gerenciamento dos agendamentos.
+
+Informações principais:
+
+- Cliente
+- Serviço
+- Data/hora
+- Valor cobrado
+- Status
+- Status do pagamento
+
+O cancelamento possui uma rota específica e as transições de status são controladas pelo backend.
+
+### Dashboard
+
+O backend fornece informações
