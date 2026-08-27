@@ -442,3 +442,12 @@ body {
     justify-content: space-between;
   }
 }
+
+.form-row-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-row-group .form-row {
+  flex: 1;
+}

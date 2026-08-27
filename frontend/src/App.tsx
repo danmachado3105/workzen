@@ -3,6 +3,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ClientsPage } from "./pages/ClientsPage";
+import { ServicesPage } from "./pages/ServicesPage";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { AppLayout } from "./components/layout/AppLayout";
 
@@ -27,6 +28,16 @@ function App() {
           <ProtectedRoute>
             <AppLayout>
               <ClientsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/services"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <ServicesPage />
             </AppLayout>
           </ProtectedRoute>
         }
