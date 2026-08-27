@@ -1,18 +1,81 @@
 :root {
-  --color-bg: #f7f8fa;
+  /* ===== Cores base ===== */
+  --color-bg: #f6f7f9;
   --color-surface: #ffffff;
-  --color-border: #e2e5e9;
-  --color-text: #1a1d23;
-  --color-text-muted: #6b7280;
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-error-bg: #fef2f2;
+  --color-surface-alt: #eef0f3;
+  --color-border: #e1e4ea;
+  --color-border-strong: #c7cbd4;
+
+  --color-text: #14161d;
+  --color-text-muted: #5c6470;
+  --color-text-placeholder: #9aa2b0;
+
+  /* ===== Marca ===== */
+  --color-primary: #3730a3;
+  --color-primary-hover: #2e2687;
+  --color-primary-light: #eeecfb;
+  --color-on-primary: #ffffff;
+
+  /* ===== Estados semânticos ===== */
+  --color-success-text: #15803d;
+  --color-success-bg: #e6f6ea;
+
+  --color-warning-text: #b45309;
+  --color-warning-bg: #fff4e0;
+
   --color-error-text: #b91c1c;
+  --color-error-bg: #fdecec;
 
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --color-info-text: #1d4ed8;
+  --color-info-bg: #e6edff;
 
-  --radius-md: 8px;
+  /* ===== Sombras ===== */
+  --shadow-sm: 0 1px 2px rgba(16, 20, 30, 0.05);
+  --shadow-md: 0 4px 12px rgba(16, 20, 30, 0.07);
+  --shadow-lg: 0 16px 32px rgba(16, 20, 30, 0.12);
+
+  /* ===== Bordas arredondadas ===== */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+
+  /* ===== Espaçamento (escala de 4px) ===== */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
   --spacing-unit: 1rem;
+
+  /* ===== Tipografia ===== */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.55;
+
+  /* ===== Foco (acessibilidade) ===== */
+  --focus-ring: 0 0 0 3px rgba(55, 48, 163, 0.28);
+
+  /* ===== Transições ===== */
+  --transition-fast: 120ms ease;
 }
 
 * {
@@ -22,8 +85,29 @@
 body {
   margin: 0;
   font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--line-height-normal);
   background-color: var(--color-bg);
   color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
 }
 
 .page-loading {
