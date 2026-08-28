@@ -1,46 +1,52 @@
 :root {
-  /* ===== Cores base ===== */
-  --color-bg: #f6f7f9;
-  --color-surface: #ffffff;
-  --color-surface-alt: #eef0f3;
-  --color-border: #e1e4ea;
-  --color-border-strong: #c7cbd4;
+  /* ===== Superfícies (dark, azulado, não preto puro) ===== */
+  --color-bg: #0d1117;
+  --color-bg-secondary: #10151c;
+  --color-surface: #151b23;
+  --color-surface-elevated: #1c232d;
 
-  --color-text: #14161d;
-  --color-text-muted: #5c6470;
-  --color-text-placeholder: #9aa2b0;
+  /* ===== Bordas ===== */
+  --color-border: #2a323d;
+  --color-border-subtle: #1f2630;
 
-  /* ===== Marca ===== */
-  --color-primary: #3730a3;
-  --color-primary-hover: #2e2687;
-  --color-primary-light: #eeecfb;
-  --color-on-primary: #ffffff;
+  /* ===== Texto ===== */
+  --color-text: #eef1f5;
+  --color-text-secondary: #b6bec9;
+  --color-text-muted: #7d8794;
+  --color-text-placeholder: #565f6b;
+
+  /* ===== Marca (verde moderno, sem neon) ===== */
+  --color-primary: #34a874;
+  --color-primary-hover: #2c9264;
+  --color-primary-active: #257c55;
+  --color-primary-soft: rgba(52, 168, 116, 0.14);
+  --color-on-primary: #06120c;
 
   /* ===== Estados semânticos ===== */
-  --color-success-text: #15803d;
-  --color-success-bg: #e6f6ea;
+  --color-success: #34a874;
+  --color-success-bg: rgba(52, 168, 116, 0.14);
 
-  --color-warning-text: #b45309;
-  --color-warning-bg: #fff4e0;
+  --color-warning: #d0954a;
+  --color-warning-bg: rgba(208, 149, 74, 0.14);
 
-  --color-error-text: #b91c1c;
-  --color-error-bg: #fdecec;
+  --color-error: #dd6b6b;
+  --color-error-bg: rgba(221, 107, 107, 0.14);
 
-  --color-info-text: #1d4ed8;
-  --color-info-bg: #e6edff;
+  --color-info: #5b9bd5;
+  --color-info-bg: rgba(91, 155, 213, 0.14);
 
-  /* ===== Sombras ===== */
-  --shadow-sm: 0 1px 2px rgba(16, 20, 30, 0.05);
-  --shadow-md: 0 4px 12px rgba(16, 20, 30, 0.07);
-  --shadow-lg: 0 16px 32px rgba(16, 20, 30, 0.12);
+  /* ===== Sombras (discretas, para dark) ===== */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.45);
 
   /* ===== Bordas arredondadas ===== */
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-full: 999px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
 
-  /* ===== Espaçamento (escala de 4px) ===== */
+  /* ===== Espaçamento (escala de 4px, mantida) ===== */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -63,6 +69,14 @@
   --text-2xl: 1.75rem;
   --text-3xl: 2.25rem;
 
+  /* Papéis tipográficos semânticos */
+  --text-title: var(--text-2xl);
+  --text-subtitle: var(--text-lg);
+  --text-body: var(--text-base);
+  --text-label: var(--text-sm);
+  --text-caption: var(--text-xs);
+  --text-value: var(--text-2xl);
+
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -71,8 +85,8 @@
   --line-height-tight: 1.25;
   --line-height-normal: 1.55;
 
-  /* ===== Foco (acessibilidade) ===== */
-  --focus-ring: 0 0 0 3px rgba(55, 48, 163, 0.28);
+  /* ===== Foco (acessibilidade, verde) ===== */
+  --focus-ring: 0 0 0 3px rgba(52, 168, 116, 0.35);
 
   /* ===== Transições ===== */
   --transition-fast: 120ms ease;
