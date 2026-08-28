@@ -9,6 +9,11 @@ import { listClients } from "../api/clients";
 import { listServices } from "../api/services";
 import type { Appointment, Client, Service, PaymentStatus } from "../types";
 import { isAxiosError } from "axios";
+import { useToast } from "../context/ToastContext";
+import { Button } from "../components/ui/Button";
+import { Spinner } from "../components/ui/Spinner";
+import { EmptyState } from "../components/ui/EmptyState";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 
 const emptyForm = {
   client_id: "",
@@ -19,6 +24,8 @@ const emptyForm = {
 };
 
 export function AppointmentsPage() {
+  const { showToast } = useToast();
+
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -30,6 +37,9 @@ export function AppointmentsPage() {
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [pendingCancel, setPendingCancel] = useState<Appointment | null>(null);
+  const [isCanceling, setIsCanceling] = useState(false);
 
   async function loadAll() {
     setIsLoading(true);
@@ -110,6 +120,7 @@ export function AppointmentsPage() {
           amount_charged: form.amount_charged,
           payment_status: form.payment_status,
         });
+        showToast("Agendamento atualizado com sucesso.", "success");
       } else {
         await createAppointment({
           client_id: Number(form.client_id),
@@ -117,6 +128,7 @@ export function AppointmentsPage() {
           scheduled_at: toIsoString(form.scheduled_at),
           amount_charged: form.amount_charged || undefined,
         });
+        showToast("Agendamento criado com sucesso.", "success");
       }
       closeForm();
       await loadAll();
@@ -133,17 +145,18 @@ export function AppointmentsPage() {
     }
   }
 
-  async function handleCancel(appointment: Appointment) {
-    const confirmed = window.confirm(
-      `Cancelar o agendamento de ${formatDateTime(appointment.scheduled_at)}?`
-    );
-    if (!confirmed) return;
-
+  async function handleConfirmCancel() {
+    if (!pendingCancel) return;
+    setIsCanceling(true);
     try {
-      await cancelAppointment(appointment.id);
+      await cancelAppointment(pendingCancel.id);
+      showToast("Agendamento cancelado com sucesso.", "success");
+      setPendingCancel(null);
       await loadAll();
     } catch {
-      setError("Não foi possível cancelar o agendamento.");
+      showToast("Não foi possível cancelar o agendamento.", "error");
+    } finally {
+      setIsCanceling(false);
     }
   }
 
@@ -153,14 +166,13 @@ export function AppointmentsPage() {
     <div className="page">
       <div className="page-header">
         <h1 className="page-title">Agendamentos</h1>
-        <button
-          className="primary-button"
+        <Button
           onClick={openCreateForm}
           disabled={!hasClientsAndServices}
           title={!hasClientsAndServices ? "Cadastre ao menos um cliente e um serviço primeiro" : undefined}
         >
           Novo agendamento
-        </button>
+        </Button>
       </div>
 
       {!hasClientsAndServices && !isLoading && (
@@ -276,22 +288,26 @@ export function AppointmentsPage() {
           )}
 
           <div className="form-actions">
-            <button type="button" className="secondary-button" onClick={closeForm}>
+            <Button variant="secondary" type="button" onClick={closeForm}>
               Cancelar
-            </button>
-            <button type="submit" className="primary-button" disabled={isSubmitting}>
-              {isSubmitting ? "Salvando..." : "Salvar"}
-            </button>
+            </Button>
+            <Button type="submit" isLoading={isSubmitting}>
+              Salvar
+            </Button>
           </div>
         </form>
       )}
 
-      {isLoading && <p className="dashboard-status">Carregando agendamentos...</p>}
+      {isLoading && <Spinner label="Carregando agendamentos..." />}
 
       {error && <p className="dashboard-status dashboard-status-error">{error}</p>}
 
-      {!isLoading && !error && appointments.length === 0 && (
-        <p className="dashboard-empty">Nenhum agendamento cadastrado ainda.</p>
+      {!isLoading && !error && appointments.length === 0 && hasClientsAndServices && (
+        <EmptyState
+          title="Nenhum agendamento cadastrado ainda"
+          description="Crie seu primeiro agendamento para começar a organizar sua agenda."
+          action={<Button onClick={openCreateForm}>Criar primeiro agendamento</Button>}
+        />
       )}
 
       {!isLoading && !error && appointments.length > 0 && (
@@ -313,18 +329,12 @@ export function AppointmentsPage() {
               <div className="data-row-actions">
                 {appointment.status === "scheduled" && (
                   <>
-                    <button
-                      className="secondary-button"
-                      onClick={() => openEditForm(appointment)}
-                    >
+                    <Button variant="secondary" onClick={() => openEditForm(appointment)}>
                       Editar
-                    </button>
-                    <button
-                      className="danger-button"
-                      onClick={() => handleCancel(appointment)}
-                    >
+                    </Button>
+                    <Button variant="danger" onClick={() => setPendingCancel(appointment)}>
                       Cancelar
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>
@@ -332,6 +342,20 @@ export function AppointmentsPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingCancel !== null}
+        title="Cancelar agendamento"
+        description={
+          pendingCancel
+            ? `Tem certeza que deseja cancelar o agendamento de ${formatDateTime(pendingCancel.scheduled_at)}? Esta ação não pode ser desfeita.`
+            : ""
+        }
+        confirmLabel="Cancelar agendamento"
+        isConfirming={isCanceling}
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setPendingCancel(null)}
+      />
     </div>
   );
 }

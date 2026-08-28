@@ -2,10 +2,17 @@ import { useEffect, useState, type FormEvent } from "react";
 import { listClients, createClient, updateClient, deleteClient } from "../api/clients";
 import type { Client } from "../types";
 import { isAxiosError } from "axios";
+import { useToast } from "../context/ToastContext";
+import { Button } from "../components/ui/Button";
+import { Spinner } from "../components/ui/Spinner";
+import { EmptyState } from "../components/ui/EmptyState";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 
 const emptyForm = { name: "", phone: "", email: "", notes: "" };
 
 export function ClientsPage() {
+  const { showToast } = useToast();
+
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,6 +22,9 @@ export function ClientsPage() {
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [pendingDelete, setPendingDelete] = useState<Client | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   async function loadClients() {
     setIsLoading(true);
@@ -74,8 +84,10 @@ export function ClientsPage() {
     try {
       if (editingId !== null) {
         await updateClient(editingId, payload);
+        showToast("Cliente atualizado com sucesso.", "success");
       } else {
         await createClient(payload);
+        showToast("Cliente criado com sucesso.", "success");
       }
       closeForm();
       await loadClients();
@@ -90,17 +102,18 @@ export function ClientsPage() {
     }
   }
 
-  async function handleDelete(client: Client) {
-    const confirmed = window.confirm(
-      `Remover ${client.name} da lista de clientes ativos?`
-    );
-    if (!confirmed) return;
-
+  async function handleConfirmDelete() {
+    if (!pendingDelete) return;
+    setIsDeleting(true);
     try {
-      await deleteClient(client.id);
+      await deleteClient(pendingDelete.id);
+      showToast("Cliente removido com sucesso.", "success");
+      setPendingDelete(null);
       await loadClients();
     } catch {
-      setError("Não foi possível remover o cliente.");
+      showToast("Não foi possível remover o cliente.", "error");
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -108,9 +121,7 @@ export function ClientsPage() {
     <div className="page">
       <div className="page-header">
         <h1 className="page-title">Clientes</h1>
-        <button className="primary-button" onClick={openCreateForm}>
-          Novo cliente
-        </button>
+        <Button onClick={openCreateForm}>Novo cliente</Button>
       </div>
 
       {isFormOpen && (
@@ -174,22 +185,26 @@ export function ClientsPage() {
           </div>
 
           <div className="form-actions">
-            <button type="button" className="secondary-button" onClick={closeForm}>
+            <Button variant="secondary" type="button" onClick={closeForm}>
               Cancelar
-            </button>
-            <button type="submit" className="primary-button" disabled={isSubmitting}>
-              {isSubmitting ? "Salvando..." : "Salvar"}
-            </button>
+            </Button>
+            <Button type="submit" isLoading={isSubmitting}>
+              Salvar
+            </Button>
           </div>
         </form>
       )}
 
-      {isLoading && <p className="dashboard-status">Carregando clientes...</p>}
+      {isLoading && <Spinner label="Carregando clientes..." />}
 
       {error && <p className="dashboard-status dashboard-status-error">{error}</p>}
 
       {!isLoading && !error && clients.length === 0 && (
-        <p className="dashboard-empty">Nenhum cliente cadastrado ainda.</p>
+        <EmptyState
+          title="Nenhum cliente cadastrado ainda"
+          description="Cadastre seu primeiro cliente para começar a organizar sua base."
+          action={<Button onClick={openCreateForm}>Criar primeiro cliente</Button>}
+        />
       )}
 
       {!isLoading && !error && clients.length > 0 && (
@@ -204,20 +219,31 @@ export function ClientsPage() {
                 )}
               </div>
               <div className="data-row-actions">
-                <button className="secondary-button" onClick={() => openEditForm(client)}>
+                <Button variant="secondary" onClick={() => openEditForm(client)}>
                   Editar
-                </button>
-                <button
-                  className="danger-button"
-                  onClick={() => handleDelete(client)}
-                >
+                </Button>
+                <Button variant="danger" onClick={() => setPendingDelete(client)}>
                   Remover
-                </button>
+                </Button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingDelete !== null}
+        title="Remover cliente"
+        description={
+          pendingDelete
+            ? `Tem certeza que deseja remover "${pendingDelete.name}"? Ele deixará de aparecer na sua lista de clientes ativos.`
+            : ""
+        }
+        confirmLabel="Remover"
+        isConfirming={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

@@ -7,10 +7,17 @@ import {
 } from "../api/services";
 import type { Service } from "../types";
 import { isAxiosError } from "axios";
+import { useToast } from "../context/ToastContext";
+import { Button } from "../components/ui/Button";
+import { Spinner } from "../components/ui/Spinner";
+import { EmptyState } from "../components/ui/EmptyState";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 
 const emptyForm = { name: "", price: "", duration_minutes: "" };
 
 export function ServicesPage() {
+  const { showToast } = useToast();
+
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +27,9 @@ export function ServicesPage() {
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [pendingDeactivate, setPendingDeactivate] = useState<Service | null>(null);
+  const [isDeactivating, setIsDeactivating] = useState(false);
 
   async function loadServices() {
     setIsLoading(true);
@@ -77,8 +87,10 @@ export function ServicesPage() {
     try {
       if (editingId !== null) {
         await updateService(editingId, payload);
+        showToast("Serviço atualizado com sucesso.", "success");
       } else {
         await createService(payload);
+        showToast("Serviço criado com sucesso.", "success");
       }
       closeForm();
       await loadServices();
@@ -95,17 +107,18 @@ export function ServicesPage() {
     }
   }
 
-  async function handleDelete(service: Service) {
-    const confirmed = window.confirm(
-      `Desativar o serviço "${service.name}"?`
-    );
-    if (!confirmed) return;
-
+  async function handleConfirmDeactivate() {
+    if (!pendingDeactivate) return;
+    setIsDeactivating(true);
     try {
-      await deleteService(service.id);
+      await deleteService(pendingDeactivate.id);
+      showToast("Serviço desativado com sucesso.", "success");
+      setPendingDeactivate(null);
       await loadServices();
     } catch {
-      setError("Não foi possível desativar o serviço.");
+      showToast("Não foi possível desativar o serviço.", "error");
+    } finally {
+      setIsDeactivating(false);
     }
   }
 
@@ -113,9 +126,7 @@ export function ServicesPage() {
     <div className="page">
       <div className="page-header">
         <h1 className="page-title">Serviços</h1>
-        <button className="primary-button" onClick={openCreateForm}>
-          Novo serviço
-        </button>
+        <Button onClick={openCreateForm}>Novo serviço</Button>
       </div>
 
       {isFormOpen && (
@@ -175,22 +186,26 @@ export function ServicesPage() {
           </div>
 
           <div className="form-actions">
-            <button type="button" className="secondary-button" onClick={closeForm}>
+            <Button variant="secondary" type="button" onClick={closeForm}>
               Cancelar
-            </button>
-            <button type="submit" className="primary-button" disabled={isSubmitting}>
-              {isSubmitting ? "Salvando..." : "Salvar"}
-            </button>
+            </Button>
+            <Button type="submit" isLoading={isSubmitting}>
+              Salvar
+            </Button>
           </div>
         </form>
       )}
 
-      {isLoading && <p className="dashboard-status">Carregando serviços...</p>}
+      {isLoading && <Spinner label="Carregando serviços..." />}
 
       {error && <p className="dashboard-status dashboard-status-error">{error}</p>}
 
       {!isLoading && !error && services.length === 0 && (
-        <p className="dashboard-empty">Nenhum serviço cadastrado ainda.</p>
+        <EmptyState
+          title="Nenhum serviço cadastrado ainda"
+          description="Cadastre os serviços que você oferece para começar a criar agendamentos."
+          action={<Button onClick={openCreateForm}>Criar primeiro serviço</Button>}
+        />
       )}
 
       {!isLoading && !error && services.length > 0 && (
@@ -204,17 +219,31 @@ export function ServicesPage() {
                 </span>
               </div>
               <div className="data-row-actions">
-                <button className="secondary-button" onClick={() => openEditForm(service)}>
+                <Button variant="secondary" onClick={() => openEditForm(service)}>
                   Editar
-                </button>
-                <button className="danger-button" onClick={() => handleDelete(service)}>
+                </Button>
+                <Button variant="danger" onClick={() => setPendingDeactivate(service)}>
                   Desativar
-                </button>
+                </Button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingDeactivate !== null}
+        title="Desativar serviço"
+        description={
+          pendingDeactivate
+            ? `Tem certeza que deseja desativar "${pendingDeactivate.name}"? Ele deixará de aparecer na sua lista de serviços ativos.`
+            : ""
+        }
+        confirmLabel="Desativar"
+        isConfirming={isDeactivating}
+        onConfirm={handleConfirmDeactivate}
+        onCancel={() => setPendingDeactivate(null)}
+      />
     </div>
   );
 }
