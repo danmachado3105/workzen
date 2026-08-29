@@ -7,7 +7,7 @@ from fastapi import HTTPException, status
 
 from app.config import settings
 from app.auth.model import User
-from app.auth.schema import UserCreate
+from app.auth.schema import UserCreate, UserUpdate
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -54,4 +54,11 @@ def authenticate_user(db: Session, email: str, password: str) -> User:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email ou senha inválidos",
         )
+    return user
+
+
+def update_user_profile(db: Session, user: User, data: UserUpdate) -> User:
+    user.name = data.name
+    db.commit()
+    db.refresh(user)
     return user

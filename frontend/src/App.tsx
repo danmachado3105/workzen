@@ -5,6 +5,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { ClientsPage } from "./pages/ClientsPage";
 import { ServicesPage } from "./pages/ServicesPage";
 import { AppointmentsPage } from "./pages/AppointmentsPage";
+import { SettingsPage } from "./pages/SettingsPage";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { AppLayout } from "./components/layout/AppLayout";
 
@@ -49,6 +50,16 @@ function App() {
           <ProtectedRoute>
             <AppLayout>
               <AppointmentsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <SettingsPage />
             </AppLayout>
           </ProtectedRoute>
         }

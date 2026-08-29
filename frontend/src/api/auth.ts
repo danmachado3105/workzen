@@ -1,5 +1,11 @@
 import apiClient from "./client";
-import type { AuthResponse, LoginPayload, RegisterPayload, User } from "../types";
+import type {
+  AuthResponse,
+  LoginPayload,
+  RegisterPayload,
+  UpdateProfilePayload,
+  User,
+} from "../types";
 
 export async function register(payload: RegisterPayload): Promise<User> {
   const response = await apiClient.post<User>("/auth/register", payload);
@@ -16,5 +22,15 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
       "Content-Type": "application/x-www-form-urlencoded",
     },
   });
+  return response.data;
+}
+
+export async function getMe(): Promise<User> {
+  const response = await apiClient.get<User>("/auth/me");
+  return response.data;
+}
+
+export async function updateProfile(payload: UpdateProfilePayload): Promise<User> {
+  const response = await apiClient.patch<User>("/auth/me", payload);
   return response.data;
 }
