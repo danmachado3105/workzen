@@ -19,8 +19,14 @@ export function Button({
   const classes = ["btn", `btn-${variant}`, className].filter(Boolean).join(" ");
 
   return (
-    <button className={classes} disabled={disabled || isLoading} {...rest}>
-      {isLoading ? "Salvando..." : children}
+    <button
+      className={classes}
+      disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
+      {...rest}
+    >
+      {isLoading && <span className="btn-loader" aria-hidden="true" />}
+      <span>{isLoading ? "Processando..." : children}</span>
     </button>
   );
 }
