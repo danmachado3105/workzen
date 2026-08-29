@@ -219,7 +219,7 @@ export function AppointmentsPage() {
             {editingId !== null ? "Editar agendamento" : "Novo agendamento"}
           </h2>
 
-          {formError && <div className="auth-error">{formError}</div>}
+          {formError && <div className="auth-error" role="alert">{formError}</div>}
 
           {editingId === null && (
             <>

@@ -22,6 +22,16 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const cancelRef = useRef(onCancel);
+  const isConfirmingRef = useRef(isConfirming);
+
+  useEffect(() => {
+    cancelRef.current = onCancel;
+  }, [onCancel]);
+
+  useEffect(() => {
+    isConfirmingRef.current = isConfirming;
+  }, [isConfirming]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -37,9 +47,9 @@ export function ConfirmDialog({
     focusable?.focus();
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isConfirming) {
+      if (event.key === "Escape" && !isConfirmingRef.current) {
         event.preventDefault();
-        onCancel();
+        cancelRef.current();
         return;
       }
 
@@ -65,7 +75,7 @@ export function ConfirmDialog({
       document.removeEventListener("keydown", handleKeyDown);
       previousFocusRef.current?.focus();
     };
-  }, [isConfirming, isOpen, onCancel]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
