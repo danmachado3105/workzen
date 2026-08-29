@@ -394,6 +394,22 @@ label {
   border-radius: var(--radius-sm);
 }
 
+.app-user-details {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.app-user-name {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .app-user-avatar {
   display: flex;
   align-items: center;
@@ -416,6 +432,117 @@ label {
   font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Settings */
+.settings-page {
+  display: flex;
+  max-width: 720px;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.settings-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.settings-intro {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.settings-section-heading h2 {
+  margin-bottom: var(--space-1);
+  font-size: var(--text-lg);
+}
+
+.settings-section-heading p,
+.settings-help {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  background: linear-gradient(145deg, var(--color-surface-raised), var(--color-surface));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-field .form-input {
+  margin-bottom: var(--space-2);
+}
+
+.settings-readonly-input {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.76;
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.settings-account-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+
+.settings-account-card > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.settings-account-card strong {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-account-label {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.settings-account-card .settings-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  color: var(--color-primary);
+}
+
+.settings-status::before {
+  width: 0.42rem;
+  height: 0.42rem;
+  margin-right: 0.42rem;
+  background: var(--color-primary);
+  border-radius: 50%;
+  content: "";
 }
 
 .app-logout-button {
