@@ -47,6 +47,20 @@ A estrutura principal do sistema já está implementada e funcionando de ponta a
 
 ---
 
+## Preparação para deploy
+
+O repositório não contém segredos. Antes de publicar, configure as variáveis de ambiente na plataforma escolhida:
+
+- Backend: `DATABASE_URL`, `SECRET_KEY` (uma chave longa e exclusiva) e `CORS_ORIGINS` com a URL HTTPS exata do frontend.
+- Frontend: `VITE_API_URL` com a URL pública HTTPS da API. Essa variável é incorporada no build; alterá-la exige um novo build/deploy do frontend.
+- PostgreSQL: use uma instância gerenciada ou configure o banco com backup, credenciais próprias e SSL quando exigido pelo provedor.
+
+O `backend/Dockerfile` é o runtime de produção: inicia como usuário sem privilégios, aplica `alembic upgrade head` e então sobe o Uvicorn. O `docker-compose.yml` continua sendo voltado ao desenvolvimento local, com volume montado e `--reload`.
+
+Após provisionar o banco, verifique `GET /health`. O endpoint só responde `200` quando a API também consegue consultar o banco; em caso de indisponibilidade responde `503` sem revelar detalhes internos.
+
+---
+
 # 🏗️ Stack
 
 ## Backend

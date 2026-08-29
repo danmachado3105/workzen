@@ -1,4 +1,5 @@
 services:
+  # Ambiente de desenvolvimento local. A imagem de produção usa o CMD do Dockerfile.
   db:
     image: postgres:16
     restart: always
