@@ -1330,6 +1330,28 @@ select.form-input {
   color: var(--color-error);
 }
 
+.dashboard-status-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding-inline: var(--space-4);
+}
+
+.dashboard-status-error .btn {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 560px) {
+  .dashboard-status-error {
+    flex-direction: column;
+  }
+
+  .dashboard-status-error .btn {
+    width: 100%;
+  }
+}
+
 .appointment-list {
   display: flex;
   flex-direction: column;

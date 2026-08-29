@@ -204,7 +204,7 @@ export function ServicesPage() {
 
       {isLoading && <Spinner label="Carregando serviços..." />}
 
-      {error && <p className="dashboard-status dashboard-status-error">{error}</p>}
+      {error && <div className="dashboard-status dashboard-status-error" role="alert"><span>{error}</span><Button variant="secondary" onClick={loadServices}>Tentar novamente</Button></div>}
 
       {!isLoading && !error && services.length === 0 && (
         <EmptyState

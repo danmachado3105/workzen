@@ -204,7 +204,7 @@ export function ClientsPage() {
 
       {isLoading && <Spinner label="Carregando clientes..." />}
 
-      {error && <p className="dashboard-status dashboard-status-error">{error}</p>}
+      {error && <div className="dashboard-status dashboard-status-error" role="alert"><span>{error}</span><Button variant="secondary" onClick={loadClients}>Tentar novamente</Button></div>}
 
       {!isLoading && !error && clients.length === 0 && (
         <EmptyState

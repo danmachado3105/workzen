@@ -134,7 +134,14 @@ export function DashboardPage() {
   }
 
   if (isLoading) return <Spinner label="Organizando a visão do seu negócio..." />;
-  if (error) return <div className="dashboard-status dashboard-status-error">{error}</div>;
+  if (error) {
+    return (
+      <div className="dashboard-status dashboard-status-error" role="alert">
+        <span>{error}</span>
+        <Button variant="secondary" onClick={loadDashboard}>Tentar novamente</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard dashboard-command-center">

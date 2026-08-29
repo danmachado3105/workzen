@@ -332,7 +332,7 @@ export function AppointmentsPage() {
 
       {isLoading && <Spinner label="Organizando sua agenda..." />}
 
-      {error && <p className="dashboard-status dashboard-status-error">{error}</p>}
+      {error && <div className="dashboard-status dashboard-status-error" role="alert"><span>{error}</span><Button variant="secondary" onClick={loadAll}>Tentar novamente</Button></div>}
 
       {!isLoading && !error && appointments.length === 0 && hasClientsAndServices && (
         <EmptyState
