@@ -13,12 +13,11 @@ def create_service(db: Session, data: ServiceCreate, user_id: int) -> Service:
     return service
 
 
-def list_services(db: Session, user_id: int) -> list[Service]:
-    return (
-        db.query(Service)
-        .filter(Service.is_active == True, Service.user_id == user_id)
-        .all()
-    )
+def list_services(db: Session, user_id: int, include_inactive: bool = False) -> list[Service]:
+    query = db.query(Service).filter(Service.user_id == user_id)
+    if not include_inactive:
+        query = query.filter(Service.is_active == True)
+    return query.all()
 
 
 def get_service(db: Session, service_id: int, user_id: int) -> Service:

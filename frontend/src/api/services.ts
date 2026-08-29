@@ -7,8 +7,10 @@ export interface ServicePayload {
   duration_minutes: number;
 }
 
-export async function listServices(): Promise<Service[]> {
-  const response = await apiClient.get<Service[]>("/services/");
+export async function listServices(includeInactive = false): Promise<Service[]> {
+  const response = await apiClient.get<Service[]>("/services/", {
+    params: includeInactive ? { include_inactive: true } : undefined,
+  });
   return response.data;
 }
 

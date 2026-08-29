@@ -42,3 +42,20 @@ def test_user_cannot_access_other_users_service(client, auth_headers):
 
     response = client.get(f"/services/{created['id']}", headers=headers_b)
     assert response.status_code == 404
+
+
+def test_list_services_can_include_inactive_records_for_history(client, auth_headers):
+    headers = auth_headers(email="history-service@teste.com", name="History Service")
+    created = client.post(
+        "/services/",
+        json={"name": "Serviço histórico", "price": "15.00", "duration_minutes": 25},
+        headers=headers,
+    ).json()
+    client.delete(f"/services/{created['id']}", headers=headers)
+
+    active_only = client.get("/services/", headers=headers)
+    including_inactive = client.get("/services/?include_inactive=true", headers=headers)
+
+    assert active_only.json() == []
+    assert including_inactive.json()[0]["id"] == created["id"]
+    assert including_inactive.json()[0]["is_active"] is False

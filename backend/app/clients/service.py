@@ -13,12 +13,11 @@ def create_client(db: Session, data: ClientCreate, user_id: int) -> Client:
     return client
 
 
-def list_clients(db: Session, user_id: int) -> list[Client]:
-    return (
-        db.query(Client)
-        .filter(Client.is_active == True, Client.user_id == user_id)
-        .all()
-    )
+def list_clients(db: Session, user_id: int, include_inactive: bool = False) -> list[Client]:
+    query = db.query(Client).filter(Client.user_id == user_id)
+    if not include_inactive:
+        query = query.filter(Client.is_active == True)
+    return query.all()
 
 
 def get_client(db: Session, client_id: int, user_id: int) -> Client:

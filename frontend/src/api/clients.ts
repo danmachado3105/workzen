@@ -8,8 +8,10 @@ export interface ClientPayload {
   notes?: string | null;
 }
 
-export async function listClients(): Promise<Client[]> {
-  const response = await apiClient.get<Client[]>("/clients/");
+export async function listClients(includeInactive = false): Promise<Client[]> {
+  const response = await apiClient.get<Client[]>("/clients/", {
+    params: includeInactive ? { include_inactive: true } : undefined,
+  });
   return response.data;
 }
 

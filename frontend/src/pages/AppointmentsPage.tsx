@@ -46,6 +46,7 @@ export function AppointmentsPage() {
   const [isCanceling, setIsCanceling] = useState(false);
   const [pendingCompletion, setPendingCompletion] = useState<Appointment | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [processingPaymentId, setProcessingPaymentId] = useState<number | null>(null);
   const [scope, setScope] = useState<AgendaScope>("day");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
@@ -57,8 +58,8 @@ export function AppointmentsPage() {
     try {
       const [appointmentsData, clientsData, servicesData] = await Promise.all([
         listAppointments(),
-        listClients(),
-        listServices(),
+        listClients(true),
+        listServices(true),
       ]);
       setAppointments(appointmentsData);
       setClients(clientsData);
@@ -173,7 +174,9 @@ export function AppointmentsPage() {
     }
   }
 
-  const hasClientsAndServices = clients.length > 0 && services.length > 0;
+  const activeClients = clients.filter((client) => client.is_active);
+  const activeServices = services.filter((service) => service.is_active);
+  const hasClientsAndServices = activeClients.length > 0 && activeServices.length > 0;
   const visibleAppointments = useMemo(() => {
     const now = new Date();
     return appointments
@@ -210,6 +213,20 @@ export function AppointmentsPage() {
       showToast(message, "error");
     } finally {
       setIsCompleting(false);
+    }
+  }
+
+  async function handleMarkAsPaid(appointment: Appointment) {
+    setProcessingPaymentId(appointment.id);
+    try {
+      await updateAppointment(appointment.id, { payment_status: "paid" });
+      showToast("Pagamento marcado como pago.", "success");
+      setSelectedAppointment(null);
+      await loadAll();
+    } catch {
+      showToast("Não foi possível atualizar o pagamento.", "error");
+    } finally {
+      setProcessingPaymentId(null);
     }
   }
 
@@ -261,7 +278,7 @@ export function AppointmentsPage() {
                   <option value="" disabled>
                     Selecione um cliente
                   </option>
-                  {clients.map((client) => (
+                  {activeClients.map((client) => (
                     <option key={client.id} value={client.id}>
                       {client.name}
                     </option>
@@ -283,7 +300,7 @@ export function AppointmentsPage() {
                   <option value="" disabled>
                     Selecione um serviço
                   </option>
-                  {services.map((service) => (
+                  {activeServices.map((service) => (
                     <option key={service.id} value={service.id}>
                       {service.name}
                     </option>
@@ -370,9 +387,9 @@ export function AppointmentsPage() {
         <div className="agenda-workspace">
           <div className="agenda-toolbar" aria-label="Controles da agenda">
             <div className="agenda-scope-control" role="group" aria-label="Período exibido">
-              <button type="button" className={scope === "day" ? "agenda-scope-button active" : "agenda-scope-button"} onClick={showToday}>Hoje</button>
-              <button type="button" className={scope === "upcoming" ? "agenda-scope-button active" : "agenda-scope-button"} onClick={() => setScope("upcoming")}>Próximos</button>
-              <button type="button" className={scope === "all" ? "agenda-scope-button active" : "agenda-scope-button"} onClick={() => setScope("all")}>Todos</button>
+              <button type="button" className={scope === "day" ? "agenda-scope-button active" : "agenda-scope-button"} aria-pressed={scope === "day"} onClick={showToday}>Hoje</button>
+              <button type="button" className={scope === "upcoming" ? "agenda-scope-button active" : "agenda-scope-button"} aria-pressed={scope === "upcoming"} onClick={() => setScope("upcoming")}>Próximos</button>
+              <button type="button" className={scope === "all" ? "agenda-scope-button active" : "agenda-scope-button"} aria-pressed={scope === "all"} onClick={() => setScope("all")}>Todos</button>
             </div>
             <label className="agenda-filter">
               <span>Estado</span>
@@ -459,6 +476,8 @@ export function AppointmentsPage() {
         onClose={() => setSelectedAppointment(null)}
         onEdit={() => { if (selectedAppointment) { setSelectedAppointment(null); openEditForm(selectedAppointment); } }}
         onComplete={() => { if (selectedAppointment) { setSelectedAppointment(null); setPendingCompletion(selectedAppointment); } }}
+        isPaying={selectedAppointment !== null && processingPaymentId === selectedAppointment.id}
+        onMarkAsPaid={() => { if (selectedAppointment) void handleMarkAsPaid(selectedAppointment); }}
         onCancel={() => { if (selectedAppointment) { setSelectedAppointment(null); setPendingCancel(selectedAppointment); } }}
       />
     </div>
@@ -510,7 +529,7 @@ function toIsoString(datetimeLocalValue: string): string {
   return new Date(datetimeLocalValue).toISOString();
 }
 
-function AppointmentDetailsDialog({ appointment, clientName, serviceName, onClose, onEdit, onComplete, onCancel }: { appointment: Appointment | null; clientName: string; serviceName: string; onClose: () => void; onEdit: () => void; onComplete: () => void; onCancel: () => void }) {
+function AppointmentDetailsDialog({ appointment, clientName, serviceName, onClose, onEdit, onComplete, isPaying, onMarkAsPaid, onCancel }: { appointment: Appointment | null; clientName: string; serviceName: string; onClose: () => void; onEdit: () => void; onComplete: () => void; isPaying: boolean; onMarkAsPaid: () => void; onCancel: () => void }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -548,7 +567,7 @@ function AppointmentDetailsDialog({ appointment, clientName, serviceName, onClos
   }, [appointment, onClose]);
 
   if (!appointment) return null;
-  return <div className="dialog-overlay" role="presentation" onClick={onClose}><div ref={dialogRef} className="dialog-card agenda-details-dialog" role="dialog" aria-modal="true" aria-labelledby="appointment-details-title" aria-describedby="appointment-details-summary" onClick={(event) => event.stopPropagation()}><div className="agenda-details-heading"><div><p className="dashboard-eyebrow">Agendamento</p><h2 id="appointment-details-title">{clientName}</h2></div><button ref={closeButtonRef} type="button" className="agenda-details-close" onClick={onClose} aria-label="Fechar detalhes">×</button></div><p id="appointment-details-summary" className="sr-only">Detalhes do agendamento de {clientName}.</p><div className="agenda-details-list"><div><span>Quando</span><strong>{formatDateTime(appointment.scheduled_at)}</strong></div><div><span>Serviço</span><strong>{serviceName}</strong></div><div><span>Valor</span><strong>{formatCurrency(appointment.amount_charged)}</strong></div><div><span>Status</span><span className="badge-group"><StatusBadge status={appointment.status} /><PaymentBadge status={appointment.payment_status} /></span></div></div>{appointment.status === "scheduled" && <div className="dialog-actions"><Button variant="secondary" onClick={onEdit}>Editar</Button><Button variant="secondary" onClick={onComplete}>Concluir atendimento</Button><Button variant="danger" onClick={onCancel}>Cancelar agendamento</Button></div>}</div></div>;
+  return <div className="dialog-overlay" role="presentation" onClick={onClose}><div ref={dialogRef} className="dialog-card agenda-details-dialog" role="dialog" aria-modal="true" aria-labelledby="appointment-details-title" aria-describedby="appointment-details-summary" onClick={(event) => event.stopPropagation()}><div className="agenda-details-heading"><div><p className="dashboard-eyebrow">Agendamento</p><h2 id="appointment-details-title">{clientName}</h2></div><button ref={closeButtonRef} type="button" className="agenda-details-close" onClick={onClose} aria-label="Fechar detalhes">×</button></div><p id="appointment-details-summary" className="sr-only">Detalhes do agendamento de {clientName}.</p><div className="agenda-details-list"><div><span>Quando</span><strong>{formatDateTime(appointment.scheduled_at)}</strong></div><div><span>Serviço</span><strong>{serviceName}</strong></div><div><span>Valor</span><strong>{formatCurrency(appointment.amount_charged)}</strong></div><div><span>Status</span><span className="badge-group"><StatusBadge status={appointment.status} /><PaymentBadge status={appointment.payment_status} /></span></div></div>{appointment.status !== "canceled" && <div className="dialog-actions">{appointment.payment_status === "pending" && <Button variant="secondary" onClick={onMarkAsPaid} isLoading={isPaying}>Marcar como pago</Button>}{appointment.status === "scheduled" && <><Button variant="secondary" onClick={onEdit}>Editar</Button><Button variant="secondary" onClick={onComplete}>Concluir atendimento</Button><Button variant="danger" onClick={onCancel}>Cancelar agendamento</Button></>}</div>}</div></div>;
 }
 
 function startOfDay(date: Date): Date { return new Date(date.getFullYear(), date.getMonth(), date.getDate()); }

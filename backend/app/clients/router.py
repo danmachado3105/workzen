@@ -21,10 +21,11 @@ def create_client(
 
 @router.get("/", response_model=list[ClientRead])
 def list_clients(
+    include_inactive: bool = False,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return service.list_clients(db, current_user.id)
+    return service.list_clients(db, current_user.id, include_inactive=include_inactive)
 
 
 @router.get("/{client_id}", response_model=ClientRead)

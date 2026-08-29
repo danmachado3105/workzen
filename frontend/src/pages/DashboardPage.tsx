@@ -46,8 +46,8 @@ export function DashboardPage() {
     try {
       const [appointmentsData, clientsData, servicesData] = await Promise.all([
         listAppointments(),
-        listClients(),
-        listServices(),
+        listClients(true),
+        listServices(true),
       ]);
       setAppointments(appointmentsData);
       setClients(clientsData);
@@ -154,7 +154,7 @@ export function DashboardPage() {
         <div className="dashboard-hero-actions">
           <div className="period-control" aria-label="Período do dashboard">
             {periods.map((option) => (
-              <button key={option.key} type="button" className={period === option.key ? "period-button active" : "period-button"} onClick={() => setPeriod(option.key)}>
+              <button key={option.key} type="button" className={period === option.key ? "period-button active" : "period-button"} aria-pressed={period === option.key} onClick={() => setPeriod(option.key)}>
                 {option.label}
               </button>
             ))}
@@ -197,8 +197,8 @@ export function DashboardPage() {
           <div className="panel-heading"><div><p className="panel-kicker">Agenda</p><h2>Status no período</h2></div></div>
           <StatusDistribution counts={statusCounts} total={appointmentsInPeriod.length} />
           <div className="business-inventory">
-            <div><span className="inventory-value">{clients.length}</span><span>clientes ativos</span></div>
-            <div><span className="inventory-value">{services.length}</span><span>serviços ativos</span></div>
+            <div><span className="inventory-value">{clients.filter((client) => client.is_active).length}</span><span>clientes ativos</span></div>
+            <div><span className="inventory-value">{services.filter((service) => service.is_active).length}</span><span>serviços ativos</span></div>
           </div>
         </article>
       </section>

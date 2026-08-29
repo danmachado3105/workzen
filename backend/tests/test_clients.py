@@ -61,3 +61,18 @@ def test_user_cannot_delete_other_users_client(client, auth_headers):
 
     response = client.delete(f"/clients/{created['id']}", headers=headers_b)
     assert response.status_code == 404
+
+
+def test_list_clients_can_include_inactive_records_for_history(client, auth_headers):
+    headers = auth_headers(email="history-client@teste.com", name="History Client")
+    created = client.post(
+        "/clients/", json={"name": "Cliente histórico", "phone": "555"}, headers=headers
+    ).json()
+    client.delete(f"/clients/{created['id']}", headers=headers)
+
+    active_only = client.get("/clients/", headers=headers)
+    including_inactive = client.get("/clients/?include_inactive=true", headers=headers)
+
+    assert active_only.json() == []
+    assert including_inactive.json()[0]["id"] == created["id"]
+    assert including_inactive.json()[0]["is_active"] is False
