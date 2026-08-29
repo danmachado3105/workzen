@@ -141,7 +141,7 @@ export function DashboardPage() {
       <header className="dashboard-hero">
         <div>
           <p className="dashboard-eyebrow">Visão geral</p>
-          <h1 className="dashboard-title">{getGreeting(user?.email)}</h1>
+          <h1 className="dashboard-title">{getGreeting(user?.name)}</h1>
           <p className="dashboard-subtitle">Acompanhe agenda, pagamentos e operação em um só lugar.</p>
         </div>
         <div className="dashboard-hero-actions">
@@ -341,7 +341,11 @@ function countStatuses(appointments: Appointment[]): Record<AppointmentStatus, n
 function toDateKey(date: Date): string { return [date.getFullYear(), date.getMonth(), date.getDate()].join("-"); }
 function findClientName(clients: Client[], id: number): string { return clients.find((client) => client.id === id)?.name ?? "Cliente removido"; }
 function findServiceName(services: Service[], id: number): string { return services.find((service) => service.id === id)?.name ?? "Serviço removido"; }
-function getGreeting(email?: string): string { const hour = new Date().getHours(); const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite"; const name = email?.split("@")[0]; return name ? `${greeting}, ${name}` : greeting; }
+function getGreeting(name?: string): string {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+  return name ? `${greeting}, ${name} 👋` : greeting;
+}
 function getPeriodLabel(period: PeriodKey): string { return periods.find((item) => item.key === period)?.label ?? "Este mês"; }
 function formatCurrency(value: number | string): string { return Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
 function formatDateTime(value: string): string { return new Date(value).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); }

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import * as authApi from "../api/auth";
-import type { LoginPayload, RegisterPayload, User } from "../types";
+import type { LoginPayload, RegisterPayload, UpdateProfilePayload, User } from "../types";
 
 interface AuthContextValue {
   user: User | null;
@@ -8,6 +8,7 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
+  updateProfile: (payload: UpdateProfilePayload) => Promise<User>;
   logout: () => void;
 }
 
@@ -24,26 +25,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedToken = localStorage.getItem(TOKEN_KEY);
     const storedUser = localStorage.getItem(USER_KEY);
 
-    if (storedToken && storedUser) {
-      setUser(JSON.parse(storedUser));
+    async function restoreSession() {
+      if (!storedToken) {
+        setIsLoading(false);
+        return;
+      }
+
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser) as User);
+        } catch {
+          localStorage.removeItem(USER_KEY);
+        }
+      }
+
+      try {
+        const currentUser = await authApi.getMe();
+        persistUser(currentUser);
+      } catch {
+        // O interceptor limpa uma sessão expirada. Para uma falha temporária de rede,
+        // o perfil persistido continua disponível até a próxima tentativa.
+      } finally {
+        setIsLoading(false);
+      }
     }
-    setIsLoading(false);
+
+    void restoreSession();
   }, []);
+
+  function persistUser(nextUser: User) {
+    localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+    setUser(nextUser);
+  }
 
   async function login(payload: LoginPayload) {
     const authResponse = await authApi.login(payload);
     localStorage.setItem(TOKEN_KEY, authResponse.access_token);
-
-    // O backend não devolve os dados do usuário no login, só o token.
-    // Por enquanto guardamos um usuário mínimo com o email informado;
-    // isso será refinado quando tivermos uma rota "/auth/me" ou similar.
-    const minimalUser = { email: payload.email } as User;
-    localStorage.setItem(USER_KEY, JSON.stringify(minimalUser));
-    setUser(minimalUser);
+    persistUser(authResponse.user);
   }
 
   async function register(payload: RegisterPayload) {
     await authApi.register(payload);
+  }
+
+  async function updateProfile(payload: UpdateProfilePayload) {
+    const updatedUser = await authApi.updateProfile(payload);
+    persistUser(updatedUser);
+    return updatedUser;
   }
 
   function logout() {
@@ -60,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         register,
+        updateProfile,
         logout,
       }}
     >

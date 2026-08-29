@@ -7,6 +7,7 @@ const navItems = [
   { to: "/appointments", label: "Agenda", icon: "calendar" },
   { to: "/clients", label: "Clientes", icon: "clients" },
   { to: "/services", label: "Serviços", icon: "services" },
+  { to: "/settings", label: "Configurações", icon: "settings" },
 ] as const;
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -32,16 +33,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
               {item.label}
             </NavLink>
           ))}
-          <span className="app-sidebar-link disabled" title="Em breve">
-            <NavIcon name="settings" />
-            Configurações
-          </span>
         </nav>
 
         <div className="app-sidebar-footer">
           <div className="app-user">
-            <span className="app-user-avatar">{getInitial(user?.email)}</span>
-            <span className="app-user-email">{user?.email}</span>
+            <span className="app-user-avatar">{getInitial(user?.name)}</span>
+            <span className="app-user-details">
+              <span className="app-user-name">{user?.name || "Sua conta"}</span>
+              <span className="app-user-email">{user?.email}</span>
+            </span>
           </div>
           <button className="app-logout-button" onClick={logout}>
             Sair
@@ -56,9 +56,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
   );
 }
 
-function getInitial(email?: string): string {
-  if (!email) return "?";
-  return email.charAt(0).toUpperCase();
+function getInitial(name?: string): string {
+  if (!name) return "?";
+  return name.trim().charAt(0).toUpperCase() || "?";
 }
 
 function NavIcon({ name }: { name: (typeof navItems)[number]["icon"] | "settings" }) {
