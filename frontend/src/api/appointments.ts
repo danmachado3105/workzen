@@ -43,3 +43,8 @@ export async function cancelAppointment(id: number): Promise<Appointment> {
   const response = await apiClient.post<Appointment>(`/appointments/${id}/cancel`);
   return response.data;
 }
+
+export async function completeAppointment(id: number): Promise<Appointment> {
+  const response = await apiClient.post<Appointment>(`/appointments/${id}/complete`);
+  return response.data;
+}

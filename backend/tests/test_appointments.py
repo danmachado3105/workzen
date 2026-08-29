@@ -411,3 +411,48 @@ def test_conflicts_are_isolated_between_users(client, auth_headers):
     response = _create_appointment(client, headers_b, client_b["id"], service_b["id"], _slot(14))
 
     assert response.status_code == 201
+
+
+def test_complete_appointment_transitions_scheduled_to_completed(client, auth_headers):
+    headers = auth_headers(email="complete@teste.com", name="Complete")
+    client_data, service_data = _create_client_and_service(client, headers)
+    created = _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14)).json()
+
+    response = client.post(f"/appointments/{created['id']}/complete", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "completed"
+
+
+def test_completed_appointment_blocks_its_slot(client, auth_headers):
+    headers = auth_headers(email="completedslot@teste.com", name="Completed slot")
+    client_data, service_data = _create_client_and_service(client, headers)
+    created = _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14)).json()
+    client.post(f"/appointments/{created['id']}/complete", headers=headers)
+
+    response = _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14))
+
+    assert response.status_code == 409
+
+
+def test_canceled_appointment_cannot_be_completed(client, auth_headers):
+    headers = auth_headers(email="completecanceled@teste.com", name="Complete canceled")
+    client_data, service_data = _create_client_and_service(client, headers)
+    created = _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14)).json()
+    client.post(f"/appointments/{created['id']}/cancel", headers=headers)
+
+    response = client.post(f"/appointments/{created['id']}/complete", headers=headers)
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Apenas agendamentos agendados podem ser concluídos."
+
+
+def test_user_cannot_complete_other_users_appointment(client, auth_headers):
+    headers_a = auth_headers(email="completea@teste.com", name="Complete A")
+    headers_b = auth_headers(email="completeb@teste.com", name="Complete B")
+    client_data, service_data = _create_client_and_service(client, headers_a)
+    created = _create_appointment(client, headers_a, client_data["id"], service_data["id"], _slot(14)).json()
+
+    response = client.post(f"/appointments/{created['id']}/complete", headers=headers_b)
+
+    assert response.status_code == 404

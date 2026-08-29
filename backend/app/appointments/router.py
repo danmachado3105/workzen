@@ -53,3 +53,12 @@ def cancel_appointment(
     current_user: User = Depends(get_current_user),
 ):
     return service.cancel_appointment(db, appointment_id, current_user.id)
+
+
+@router.post("/{appointment_id}/complete", response_model=AppointmentRead)
+def complete_appointment(
+    appointment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return service.complete_appointment(db, appointment_id, current_user.id)

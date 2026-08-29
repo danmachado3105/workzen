@@ -129,3 +129,16 @@ def cancel_appointment(db: Session, appointment_id: int, user_id: int) -> Appoin
     db.commit()
     db.refresh(appointment)
     return appointment
+
+
+def complete_appointment(db: Session, appointment_id: int, user_id: int) -> Appointment:
+    appointment = get_appointment(db, appointment_id, user_id)
+    if appointment.status != "scheduled":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Apenas agendamentos agendados podem ser concluídos.",
+        )
+    appointment.status = "completed"
+    db.commit()
+    db.refresh(appointment)
+    return appointment
