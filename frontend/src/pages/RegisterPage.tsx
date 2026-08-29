@@ -11,17 +11,23 @@ export function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [accountCreated, setAccountCreated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
+    setAccountCreated(false);
     setIsSubmitting(true);
 
     try {
       await register({ name, email, password });
-      await login({ email, password });
-      navigate("/dashboard");
+      try {
+        await login({ email, password });
+        navigate("/dashboard");
+      } catch {
+        setAccountCreated(true);
+      }
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 400) {
         setError("Já existe uma conta com esse email.");
@@ -42,6 +48,7 @@ export function RegisterPage() {
         <p className="auth-subtitle">Comece a organizar seu negócio em poucos minutos.</p>
 
         {error && <div className="auth-error" role="alert">{error}</div>}
+        {accountCreated && <div className="auth-success" role="status">Conta criada. Não foi possível entrar automaticamente; faça login para continuar.</div>}
 
         <label className="auth-label" htmlFor="name">
           Nome
@@ -83,7 +90,7 @@ export function RegisterPage() {
           autoComplete="new-password"
         />
 
-        <button type="submit" className="auth-button" disabled={isSubmitting}>
+        <button type="submit" className="auth-button" disabled={isSubmitting || accountCreated}>
           {isSubmitting ? "Criando conta..." : "Criar conta"}
         </button>
 

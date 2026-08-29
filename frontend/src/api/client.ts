@@ -15,7 +15,8 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    const hasActiveSession = Boolean(localStorage.getItem("workzen_token"));
+    if (error.response?.status === 401 && hasActiveSession) {
       localStorage.removeItem("workzen_token");
       localStorage.removeItem("workzen_user");
       window.location.href = "/login";
