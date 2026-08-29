@@ -80,7 +80,7 @@ export function ConfirmDialog({
   if (!isOpen) return null;
 
   return (
-    <div className="dialog-overlay" role="presentation" onClick={onCancel}>
+    <div className="dialog-overlay" role="presentation" onClick={isConfirming ? undefined : onCancel}>
       <div
         ref={dialogRef}
         className="dialog-card"
