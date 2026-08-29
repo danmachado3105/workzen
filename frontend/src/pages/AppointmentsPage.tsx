@@ -142,6 +142,8 @@ export function AppointmentsPage() {
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 404) {
         setFormError("Cliente ou serviço inválido.");
+      } else if (isAxiosError(err) && err.response?.status === 409) {
+        setFormError("Já existe um agendamento nesse horário. Escolha outro período.");
       } else if (isAxiosError(err) && err.response?.status === 422) {
         setFormError("Verifique os dados: todos os campos obrigatórios e o valor cobrado maior que zero.");
       } else {

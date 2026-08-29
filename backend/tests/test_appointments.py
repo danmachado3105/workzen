@@ -291,3 +291,123 @@ def test_canceling_already_canceled_appointment_is_currently_idempotent(client, 
     second_cancel = client.post(f"/appointments/{created['id']}/cancel", headers=headers)
     assert second_cancel.status_code == 200
     assert second_cancel.json()["status"] == "canceled"
+
+
+def _slot(hour: int, minute: int = 0):
+    base = datetime.now(timezone.utc) + timedelta(days=3)
+    return base.replace(hour=hour, minute=minute, second=0, microsecond=0).isoformat()
+
+
+def _create_appointment(client, headers, client_id, service_id, scheduled_at):
+    return client.post(
+        "/appointments/",
+        json={
+            "client_id": client_id,
+            "service_id": service_id,
+            "scheduled_at": scheduled_at,
+        },
+        headers=headers,
+    )
+
+
+def _create_service(client, headers, name, duration_minutes):
+    return client.post(
+        "/services/",
+        json={"name": name, "price": "50.00", "duration_minutes": duration_minutes},
+        headers=headers,
+    ).json()
+
+
+def test_create_appointments_in_adjacent_slots(client, auth_headers):
+    headers = auth_headers(email="adjacent@teste.com", name="Adjacent")
+    client_data, service_data = _create_client_and_service(client, headers, price="50.00")
+
+    first = _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14))
+    second = _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14, 30))
+
+    assert first.status_code == 201
+    assert second.status_code == 201
+
+
+def test_create_appointment_rejects_partial_overlap(client, auth_headers):
+    headers = auth_headers(email="partial@teste.com", name="Partial")
+    client_data, service_data = _create_client_and_service(client, headers, price="50.00")
+    _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14))
+
+    response = _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14, 15))
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Já existe um agendamento neste horário. Escolha outro período."
+
+
+def test_create_appointment_rejects_full_overlap(client, auth_headers):
+    headers = auth_headers(email="full@teste.com", name="Full")
+    client_data, service_data = _create_client_and_service(client, headers, price="50.00")
+    short_service = _create_service(client, headers, "Serviço curto", 15)
+    _create_appointment(client, headers, client_data["id"], short_service["id"], _slot(14, 15))
+
+    response = _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14))
+
+    assert response.status_code == 409
+
+
+def test_create_appointment_rejects_same_slot(client, auth_headers):
+    headers = auth_headers(email="same@teste.com", name="Same")
+    client_data, service_data = _create_client_and_service(client, headers, price="50.00")
+    _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14))
+
+    response = _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14))
+
+    assert response.status_code == 409
+
+
+def test_canceled_appointment_does_not_block_slot(client, auth_headers):
+    headers = auth_headers(email="canceledslot@teste.com", name="Canceled slot")
+    client_data, service_data = _create_client_and_service(client, headers, price="50.00")
+    created = _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14)).json()
+    client.post(f"/appointments/{created['id']}/cancel", headers=headers)
+
+    response = _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14))
+
+    assert response.status_code == 201
+
+
+def test_update_appointment_can_keep_its_own_slot(client, auth_headers):
+    headers = auth_headers(email="keepown@teste.com", name="Keep own")
+    client_data, service_data = _create_client_and_service(client, headers, price="50.00")
+    created = _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14)).json()
+
+    response = client.put(
+        f"/appointments/{created['id']}",
+        json={"scheduled_at": _slot(14)},
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+
+
+def test_update_appointment_rejects_conflicting_slot(client, auth_headers):
+    headers = auth_headers(email="editconflict@teste.com", name="Edit conflict")
+    client_data, service_data = _create_client_and_service(client, headers, price="50.00")
+    _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(14))
+    second = _create_appointment(client, headers, client_data["id"], service_data["id"], _slot(15)).json()
+
+    response = client.put(
+        f"/appointments/{second['id']}",
+        json={"scheduled_at": _slot(14, 15)},
+        headers=headers,
+    )
+
+    assert response.status_code == 409
+
+
+def test_conflicts_are_isolated_between_users(client, auth_headers):
+    headers_a = auth_headers(email="conflicta@teste.com", name="Conflict A")
+    headers_b = auth_headers(email="conflictb@teste.com", name="Conflict B")
+    client_a, service_a = _create_client_and_service(client, headers_a, "Cliente A", "Serviço A")
+    client_b, service_b = _create_client_and_service(client, headers_b, "Cliente B", "Serviço B")
+    _create_appointment(client, headers_a, client_a["id"], service_a["id"], _slot(14))
+
+    response = _create_appointment(client, headers_b, client_b["id"], service_b["id"], _slot(14))
+
+    assert response.status_code == 201
