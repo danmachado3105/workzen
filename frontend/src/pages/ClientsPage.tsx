@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { listClients, createClient, updateClient, deleteClient } from "../api/clients";
 import type { Client } from "../types";
 import { isAxiosError } from "axios";
@@ -25,6 +25,7 @@ export function ClientsPage() {
 
   const [pendingDelete, setPendingDelete] = useState<Client | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [search, setSearch] = useState("");
 
   async function loadClients() {
     setIsLoading(true);
@@ -42,6 +43,12 @@ export function ClientsPage() {
   useEffect(() => {
     loadClients();
   }, []);
+
+  const filteredClients = useMemo(() => {
+    const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
+    if (!searchTerm) return clients;
+    return clients.filter((client) => [client.name, client.phone, client.email ?? ""].some((value) => value.toLocaleLowerCase("pt-BR").includes(searchTerm)));
+  }, [clients, search]);
 
   function openCreateForm() {
     setEditingId(null);
@@ -119,8 +126,8 @@ export function ClientsPage() {
 
   return (
     <div className="page">
-      <div className="page-header">
-        <h1 className="page-title">Clientes</h1>
+      <div className="page-header management-page-header">
+        <div><p className="dashboard-eyebrow">Base de clientes</p><h1 className="page-title">Clientes</h1><p className="management-header-description">{clients.length} cliente{clients.length === 1 ? " ativo" : "s ativos"} na sua operação.</p></div>
         <Button onClick={openCreateForm}>Novo cliente</Button>
       </div>
 
@@ -208,15 +215,17 @@ export function ClientsPage() {
       )}
 
       {!isLoading && !error && clients.length > 0 && (
-        <div className="data-table">
-          {clients.map((client) => (
-            <div className="data-row" key={client.id}>
+        <>
+          <div className="management-toolbar">
+            <label className="management-search"><span className="sr-only">Buscar clientes</span><span aria-hidden="true">⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, telefone ou e-mail" /></label>
+            <span className="management-result-count">{filteredClients.length} de {clients.length}</span>
+          </div>
+          {filteredClients.length === 0 ? <div className="management-no-results"><strong>Nenhum cliente encontrado</strong><span>Experimente buscar por outro nome, telefone ou e-mail.</span><Button variant="ghost" onClick={() => setSearch("")}>Limpar busca</Button></div> : <div className="data-table management-list">
+          {filteredClients.map((client) => (
+            <div className="data-row management-row" key={client.id}>
               <div className="data-row-main">
-                <span className="data-row-title">{client.name}</span>
-                <span className="data-row-subtitle">{client.phone}</span>
-                {client.email && (
-                  <span className="data-row-subtitle">{client.email}</span>
-                )}
+                <span className="entity-avatar" aria-hidden="true">{getInitials(client.name)}</span>
+                <span className="entity-content"><span className="data-row-title">{client.name}</span><span className="data-row-subtitle">{client.phone}{client.email ? ` · ${client.email}` : ""}</span></span>
               </div>
               <div className="data-row-actions">
                 <Button variant="secondary" onClick={() => openEditForm(client)}>
@@ -228,7 +237,8 @@ export function ClientsPage() {
               </div>
             </div>
           ))}
-        </div>
+        </div>}
+        </>
       )}
 
       <ConfirmDialog
@@ -246,4 +256,9 @@ export function ClientsPage() {
       />
     </div>
   );
+}
+
+function getInitials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  return words.length > 1 ? `${words[0][0]}${words.at(-1)?.[0] ?? ""}`.toUpperCase() : words[0]?.[0]?.toUpperCase() ?? "?";
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   listServices,
   createService,
@@ -30,6 +30,7 @@ export function ServicesPage() {
 
   const [pendingDeactivate, setPendingDeactivate] = useState<Service | null>(null);
   const [isDeactivating, setIsDeactivating] = useState(false);
+  const [search, setSearch] = useState("");
 
   async function loadServices() {
     setIsLoading(true);
@@ -47,6 +48,11 @@ export function ServicesPage() {
   useEffect(() => {
     loadServices();
   }, []);
+
+  const filteredServices = useMemo(() => {
+    const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
+    return searchTerm ? services.filter((service) => service.name.toLocaleLowerCase("pt-BR").includes(searchTerm)) : services;
+  }, [search, services]);
 
   function openCreateForm() {
     setEditingId(null);
@@ -124,8 +130,8 @@ export function ServicesPage() {
 
   return (
     <div className="page">
-      <div className="page-header">
-        <h1 className="page-title">Serviços</h1>
+      <div className="page-header management-page-header">
+        <div><p className="dashboard-eyebrow">Catálogo</p><h1 className="page-title">Serviços</h1><p className="management-header-description">{services.length} serviço{services.length === 1 ? " ativo" : "s ativos"} para agendamento.</p></div>
         <Button onClick={openCreateForm}>Novo serviço</Button>
       </div>
 
@@ -209,14 +215,18 @@ export function ServicesPage() {
       )}
 
       {!isLoading && !error && services.length > 0 && (
-        <div className="data-table">
-          {services.map((service) => (
-            <div className="data-row" key={service.id}>
+        <>
+          <div className="management-toolbar">
+            <label className="management-search"><span className="sr-only">Buscar serviços</span><span aria-hidden="true">⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar serviço" /></label>
+            <span className="management-result-count">{filteredServices.length} de {services.length}</span>
+          </div>
+          {filteredServices.length === 0 ? <div className="management-no-results"><strong>Nenhum serviço encontrado</strong><span>Experimente buscar por outro nome.</span><Button variant="ghost" onClick={() => setSearch("")}>Limpar busca</Button></div> : <div className="data-table management-list">
+          {filteredServices.map((service) => (
+            <div className="data-row management-row service-row" key={service.id}>
               <div className="data-row-main">
-                <span className="data-row-title">{service.name}</span>
-                <span className="data-row-subtitle">
-                  {formatCurrency(service.price)} · {service.duration_minutes} min
-                </span>
+                <span className="entity-avatar entity-avatar-service" aria-hidden="true">{service.duration_minutes}<small>min</small></span>
+                <span className="entity-content"><span className="data-row-title">{service.name}</span><span className="data-row-subtitle"><span className="service-active-state">Ativo</span> · {service.duration_minutes} minutos</span></span>
+                <strong className="service-row-price">{formatCurrency(service.price)}</strong>
               </div>
               <div className="data-row-actions">
                 <Button variant="secondary" onClick={() => openEditForm(service)}>
@@ -228,7 +238,8 @@ export function ServicesPage() {
               </div>
             </div>
           ))}
-        </div>
+        </div>}
+        </>
       )}
 
       <ConfirmDialog
