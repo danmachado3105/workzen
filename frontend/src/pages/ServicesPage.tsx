@@ -141,7 +141,7 @@ export function ServicesPage() {
             {editingId !== null ? "Editar serviço" : "Novo serviço"}
           </h2>
 
-          {formError && <div className="auth-error">{formError}</div>}
+          {formError && <div className="auth-error" role="alert">{formError}</div>}
 
           <div className="form-row">
             <label className="form-label" htmlFor="name">
@@ -218,7 +218,7 @@ export function ServicesPage() {
         <>
           <div className="management-toolbar">
             <label className="management-search"><span className="sr-only">Buscar serviços</span><span aria-hidden="true">⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar serviço" /></label>
-            <span className="management-result-count">{filteredServices.length} de {services.length}</span>
+            <span className="management-result-count" aria-live="polite">{filteredServices.length} de {services.length}</span>
           </div>
           {filteredServices.length === 0 ? <div className="management-no-results"><strong>Nenhum serviço encontrado</strong><span>Experimente buscar por outro nome.</span><Button variant="ghost" onClick={() => setSearch("")}>Limpar busca</Button></div> : <div className="data-table management-list">
           {filteredServices.map((service) => (

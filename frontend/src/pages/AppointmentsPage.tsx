@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   listAppointments,
   createAppointment,
@@ -472,8 +472,44 @@ function toIsoString(datetimeLocalValue: string): string {
 }
 
 function AppointmentDetailsDialog({ appointment, clientName, serviceName, onClose, onEdit, onCancel }: { appointment: Appointment | null; clientName: string; serviceName: string; onClose: () => void; onEdit: () => void; onCancel: () => void }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!appointment) return;
+
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButtonRef.current?.focus();
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusableElements = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      ) ?? []);
+      if (focusableElements.length === 0) return;
+      const first = focusableElements[0];
+      const last = focusableElements.at(-1)!;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocus?.focus();
+    };
+  }, [appointment, onClose]);
+
   if (!appointment) return null;
-  return <div className="dialog-overlay" role="presentation" onClick={onClose}><div className="dialog-card agenda-details-dialog" role="dialog" aria-modal="true" aria-labelledby="appointment-details-title" onClick={(event) => event.stopPropagation()}><div className="agenda-details-heading"><div><p className="dashboard-eyebrow">Agendamento</p><h2 id="appointment-details-title">{clientName}</h2></div><button type="button" className="agenda-details-close" onClick={onClose} aria-label="Fechar detalhes">×</button></div><div className="agenda-details-list"><div><span>Quando</span><strong>{formatDateTime(appointment.scheduled_at)}</strong></div><div><span>Serviço</span><strong>{serviceName}</strong></div><div><span>Valor</span><strong>{formatCurrency(appointment.amount_charged)}</strong></div><div><span>Status</span><span className="badge-group"><StatusBadge status={appointment.status} /><PaymentBadge status={appointment.payment_status} /></span></div></div>{appointment.status === "scheduled" && <div className="dialog-actions"><Button variant="secondary" onClick={onEdit}>Editar</Button><Button variant="danger" onClick={onCancel}>Cancelar agendamento</Button></div>}</div></div>;
+  return <div className="dialog-overlay" role="presentation" onClick={onClose}><div ref={dialogRef} className="dialog-card agenda-details-dialog" role="dialog" aria-modal="true" aria-labelledby="appointment-details-title" aria-describedby="appointment-details-summary" onClick={(event) => event.stopPropagation()}><div className="agenda-details-heading"><div><p className="dashboard-eyebrow">Agendamento</p><h2 id="appointment-details-title">{clientName}</h2></div><button ref={closeButtonRef} type="button" className="agenda-details-close" onClick={onClose} aria-label="Fechar detalhes">×</button></div><p id="appointment-details-summary" className="sr-only">Detalhes do agendamento de {clientName}.</p><div className="agenda-details-list"><div><span>Quando</span><strong>{formatDateTime(appointment.scheduled_at)}</strong></div><div><span>Serviço</span><strong>{serviceName}</strong></div><div><span>Valor</span><strong>{formatCurrency(appointment.amount_charged)}</strong></div><div><span>Status</span><span className="badge-group"><StatusBadge status={appointment.status} /><PaymentBadge status={appointment.payment_status} /></span></div></div>{appointment.status === "scheduled" && <div className="dialog-actions"><Button variant="secondary" onClick={onEdit}>Editar</Button><Button variant="danger" onClick={onCancel}>Cancelar agendamento</Button></div>}</div></div>;
 }
 
 function startOfDay(date: Date): Date { return new Date(date.getFullYear(), date.getMonth(), date.getDate()); }

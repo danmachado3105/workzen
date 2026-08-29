@@ -137,7 +137,7 @@ export function ClientsPage() {
             {editingId !== null ? "Editar cliente" : "Novo cliente"}
           </h2>
 
-          {formError && <div className="auth-error">{formError}</div>}
+          {formError && <div className="auth-error" role="alert">{formError}</div>}
 
           <div className="form-row">
             <label className="form-label" htmlFor="name">
@@ -218,7 +218,7 @@ export function ClientsPage() {
         <>
           <div className="management-toolbar">
             <label className="management-search"><span className="sr-only">Buscar clientes</span><span aria-hidden="true">⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, telefone ou e-mail" /></label>
-            <span className="management-result-count">{filteredClients.length} de {clients.length}</span>
+            <span className="management-result-count" aria-live="polite">{filteredClients.length} de {clients.length}</span>
           </div>
           {filteredClients.length === 0 ? <div className="management-no-results"><strong>Nenhum cliente encontrado</strong><span>Experimente buscar por outro nome, telefone ou e-mail.</span><Button variant="ghost" onClick={() => setSearch("")}>Limpar busca</Button></div> : <div className="data-table management-list">
           {filteredClients.map((client) => (
