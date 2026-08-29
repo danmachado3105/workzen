@@ -29,7 +29,7 @@ def test_dashboard_summary_counts_active_clients_and_services(client, auth_heade
     assert data["active_services"] == 2
 
 
-def test_dashboard_counts_appointments_by_status(client, auth_headers, db_session):
+def test_dashboard_counts_appointments_by_status(client, auth_headers):
     headers = auth_headers(email="dash2@teste.com", name="Dash2")
     client_resp, service_resp = _create_client_and_service(client, headers)
 
@@ -47,21 +47,16 @@ def test_dashboard_counts_appointments_by_status(client, auth_headers, db_sessio
     ).json()
 
     # 1 agendamento que será marcado como "completed"
-    # OBS: hoje não existe rota de API para essa transição (só existe /cancel).
-    # Simulamos isso direto no banco de teste até essa rota ser implementada.
     a2 = client.post(
         "/appointments/",
         json={
             "client_id": client_resp["id"],
             "service_id": service_resp["id"],
-            "scheduled_at": _iso(future),
+            "scheduled_at": _iso(future + timedelta(hours=1)),
         },
         headers=headers,
     ).json()
-    from app.appointments.model import Appointment
-    appointment_in_db = db_session.query(Appointment).filter(Appointment.id == a2["id"]).first()
-    appointment_in_db.status = "completed"
-    db_session.commit()
+    client.post(f"/appointments/{a2['id']}/complete", headers=headers)
 
     # 1 agendamento que será cancelado
     a3 = client.post(
@@ -69,7 +64,7 @@ def test_dashboard_counts_appointments_by_status(client, auth_headers, db_sessio
         json={
             "client_id": client_resp["id"],
             "service_id": service_resp["id"],
-            "scheduled_at": _iso(future),
+            "scheduled_at": _iso(future + timedelta(hours=2)),
         },
         headers=headers,
     ).json()
@@ -109,7 +104,7 @@ def test_dashboard_revenue_only_counts_paid_regardless_of_status(client, auth_he
         json={
             "client_id": client_resp["id"],
             "service_id": service_resp["id"],
-            "scheduled_at": _iso(future),
+            "scheduled_at": _iso(future + timedelta(hours=1)),
         },
         headers=headers,
     )
@@ -120,7 +115,7 @@ def test_dashboard_revenue_only_counts_paid_regardless_of_status(client, auth_he
         json={
             "client_id": client_resp["id"],
             "service_id": service_resp["id"],
-            "scheduled_at": _iso(future),
+            "scheduled_at": _iso(future + timedelta(hours=2)),
         },
         headers=headers,
     ).json()
@@ -220,7 +215,7 @@ def test_upcoming_appointments_returns_only_future_scheduled_own(client, auth_he
         json={
             "client_id": client_a2["id"],
             "service_id": service_a2["id"],
-            "scheduled_at": _iso(future),
+            "scheduled_at": _iso(future + timedelta(hours=1)),
         },
         headers=headers_a,
     ).json()
