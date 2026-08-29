@@ -56,6 +56,13 @@ export function SettingsPage() {
 
         <form className="settings-card" onSubmit={handleSubmit}>
           {error && <div className="auth-error" role="alert">{error}</div>}
+          <div className="settings-profile-identity">
+            <span className="settings-profile-avatar" aria-hidden="true">{getInitials(user?.name)}</span>
+            <div>
+              <strong>{user?.name || "Sua conta"}</strong>
+              <span>{user?.email}</span>
+            </div>
+          </div>
           <div className="settings-field">
             <label className="form-label" htmlFor="profile-name">Nome</label>
             <input
@@ -100,6 +107,36 @@ export function SettingsPage() {
           <div><span className="settings-account-label">Status da conta</span><strong className="settings-status">Ativa</strong></div>
         </div>
       </section>
+
+      <section className="settings-section" aria-labelledby="preferences-heading">
+        <div className="settings-section-heading">
+          <h2 id="preferences-heading">Preferências</h2>
+          <p>Recursos pessoais que estarão disponíveis em uma próxima etapa.</p>
+        </div>
+        <div className="settings-card settings-future-card" aria-label="Preferências futuras">
+          <FuturePreference title="Tema" description="Personalização de aparência em breve." />
+          <FuturePreference title="Notificações" description="Controle de lembretes e avisos em breve." />
+        </div>
+      </section>
     </div>
   );
+}
+
+function FuturePreference({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="settings-future-item" aria-disabled="true">
+      <div>
+        <strong>{title}</strong>
+        <span>{description}</span>
+      </div>
+      <span className="settings-future-label">Em breve</span>
+    </div>
+  );
+}
+
+function getInitials(name?: string): string {
+  const words = name?.trim().split(/\s+/).filter(Boolean) ?? [];
+  if (words.length === 0) return "?";
+  if (words.length === 1) return words[0].charAt(0).toUpperCase();
+  return `${words[0].charAt(0)}${words.at(-1)?.charAt(0) ?? ""}`.toUpperCase();
 }

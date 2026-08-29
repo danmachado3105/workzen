@@ -37,7 +37,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
         <div className="app-sidebar-footer">
           <div className="app-user">
-            <span className="app-user-avatar">{getInitial(user?.name)}</span>
+            <span className="app-user-avatar">{getInitials(user?.name)}</span>
             <span className="app-user-details">
               <span className="app-user-name">{user?.name || "Sua conta"}</span>
               <span className="app-user-email">{user?.email}</span>
@@ -56,9 +56,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
   );
 }
 
-function getInitial(name?: string): string {
-  if (!name) return "?";
-  return name.trim().charAt(0).toUpperCase() || "?";
+function getInitials(name?: string): string {
+  const words = name?.trim().split(/\s+/).filter(Boolean) ?? [];
+  if (words.length === 0) return "?";
+  if (words.length === 1) return words[0].charAt(0).toUpperCase();
+  return `${words[0].charAt(0)}${words.at(-1)?.charAt(0) ?? ""}`.toUpperCase();
 }
 
 function NavIcon({ name }: { name: (typeof navItems)[number]["icon"] | "settings" }) {
