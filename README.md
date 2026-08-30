@@ -57,6 +57,15 @@ O repositório não contém segredos. Antes de publicar, configure as variáveis
 
 O `backend/Dockerfile` é o runtime de produção: inicia como usuário sem privilégios, aplica `alembic upgrade head` e então sobe o Uvicorn. O `docker-compose.yml` continua sendo voltado ao desenvolvimento local, com volume montado e `--reload`.
 
+Para executar somente a API no runtime de produção, com um PostgreSQL já acessível, construa a imagem a partir da raiz do repositório e forneça as variáveis de ambiente necessárias:
+
+```bash
+docker build -t workzen-api ./backend
+docker run --rm -p 8000:8000 --env-file .env workzen-api
+```
+
+Nesse caso, `DATABASE_URL` deve apontar para o PostgreSQL disponível para o container. Não use este comando como substituto do `docker-compose.yml`, que permanece a opção para desenvolvimento local.
+
 Após provisionar o banco, verifique `GET /health`. O endpoint só responde `200` quando a API também consegue consultar o banco; em caso de indisponibilidade responde `503` sem revelar detalhes internos.
 
 ---
