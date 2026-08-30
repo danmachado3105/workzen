@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import { Button } from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { useTheme, type Theme } from "../context/ThemeContext";
 
 const NAME_MIN_LENGTH = 1;
 const NAME_MAX_LENGTH = 120;
@@ -10,6 +11,7 @@ const NAME_MAX_LENGTH = 120;
 export function SettingsPage() {
   const { user, updateProfile } = useAuth();
   const { showToast } = useToast();
+  const { theme, setTheme } = useTheme();
   const [name, setName] = useState(user?.name ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,14 +113,45 @@ export function SettingsPage() {
       <section className="settings-section" aria-labelledby="preferences-heading">
         <div className="settings-section-heading">
           <h2 id="preferences-heading">Preferências</h2>
-          <p>Recursos pessoais que estarão disponíveis em uma próxima etapa.</p>
+          <p>Escolhas que personalizam sua experiência no WorkZen.</p>
         </div>
-        <div className="settings-card settings-future-card" aria-label="Preferências futuras">
-          <FuturePreference title="Tema" description="Personalização de aparência em breve." />
+        <div className="settings-card settings-future-card">
+          <ThemePreference theme={theme} onThemeChange={setTheme} />
           <FuturePreference title="Notificações" description="Controle de lembretes e avisos em breve." />
         </div>
       </section>
     </div>
+  );
+}
+
+function ThemePreference({ theme, onThemeChange }: { theme: Theme; onThemeChange: (theme: Theme) => void }) {
+  return (
+    <div className="settings-future-item settings-theme-item">
+      <div>
+        <strong>Tema</strong>
+        <span>Escolha como o WorkZen aparece para você.</span>
+      </div>
+      <div className="theme-selector" role="group" aria-label="Tema">
+        <ThemeOption label="Escuro" theme="dark" selectedTheme={theme} onThemeChange={onThemeChange} />
+        <ThemeOption label="Claro" theme="light" selectedTheme={theme} onThemeChange={onThemeChange} />
+      </div>
+    </div>
+  );
+}
+
+function ThemeOption({ label, theme, selectedTheme, onThemeChange }: { label: string; theme: Theme; selectedTheme: Theme; onThemeChange: (theme: Theme) => void }) {
+  const isSelected = selectedTheme === theme;
+  return (
+    <button
+      type="button"
+      className={`theme-option${isSelected ? " is-selected" : ""}`}
+      aria-pressed={isSelected}
+      onClick={() => onThemeChange(theme)}
+    >
+      <span className="theme-option-indicator" aria-hidden="true">{isSelected ? "✓" : ""}</span>
+      {label}
+      {isSelected && <span className="sr-only"> selecionado</span>}
+    </button>
   );
 }
 

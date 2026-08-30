@@ -7,6 +7,15 @@
     <meta name="theme-color" content="#0a0b0a" />
     <meta name="description" content="Gestão de clientes, serviços e agendamentos para prestadores de serviços." />
     <title>WorkZen</title>
+    <script>
+      try {
+        const theme = localStorage.getItem("workzen_theme");
+        if (theme === "light" || theme === "dark") {
+          document.documentElement.dataset.theme = theme;
+          document.querySelector('meta[name="theme-color"]').setAttribute("content", theme === "light" ? "#f4f6f1" : "#0a0b0a");
+        }
+      } catch {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
