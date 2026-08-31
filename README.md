@@ -1,416 +1,249 @@
 # WorkZen
 
-> Sistema de gestão e agendamento para prestadores de serviços.
+> Gestão de clientes, serviços e agendamentos para prestadores de serviços.
 
-O **WorkZen** é uma aplicação SaaS em desenvolvimento com o objetivo de facilitar a gestão de clientes, serviços e agendamentos para profissionais que trabalham com atendimento por horário.
+O WorkZen é um MVP SaaS para profissionais que atendem por horário. Ele centraliza clientes, serviços, agenda e o acompanhamento de pagamentos em uma interface web responsiva, com API própria e banco PostgreSQL.
 
-O projeto está sendo desenvolvido como uma aplicação completa, com **backend, frontend, banco de dados, autenticação e infraestrutura**, seguindo uma arquitetura organizada e preparada para evolução.
+## ✨ Funcionalidades
 
----
+- Cadastro, login, logout e sessão autenticada com JWT.
+- Perfil do usuário com atualização de nome.
+- Dashboard com indicadores da operação, receita recebida, status e próximos agendamentos.
+- Gestão de clientes: criar, editar e desativar sem apagar agendamentos relacionados.
+- Gestão de serviços: criar, editar e desativar sem apagar agendamentos relacionados.
+- Agenda com criação, edição, listagem por período e detalhes de agendamentos.
+- Prevenção de conflitos de horário considerando a duração do serviço.
+- Cancelamento e conclusão de atendimentos com transições controladas.
+- Controle de pagamento pendente ou pago e valor cobrado independente do preço atual do serviço.
+- Isolamento dos dados por usuário autenticado.
+- Configurações de perfil e preferência de tema Dark/Light persistida no navegador.
+- Estados de carregamento, vazio, erro, confirmações e toasts de feedback.
 
-## 🚧 Status do projeto
+## 🖥️ Interface
 
-**Em desenvolvimento — MVP funcional**
+A interface preserva uma identidade escura em grafite/preto com verde-lima como cor de destaque. O tema claro usa os mesmos tokens visuais para manter a mesma linguagem do produto. A navegação principal fica na sidebar, que se adapta para uma barra horizontal em telas menores.
 
-A estrutura principal do sistema já está implementada e funcionando de ponta a ponta.
+As telas de Dashboard, Agenda, Clientes, Serviços e Configurações foram construídas para uso em desktop e mobile, com componentes compartilhados para botões, diálogos, estados vazios, carregamento e notificações.
 
-### Progresso geral
+## 🛠️ Stack
 
-- [x] Estrutura inicial do projeto
-- [x] Backend
-- [x] Banco de dados
-- [x] Migrations
-- [x] Autenticação JWT
-- [x] API de clientes
-- [x] API de serviços
-- [x] API de agendamentos
-- [x] Dashboard
-- [x] Frontend React + TypeScript
-- [x] Login
-- [x] Cadastro
-- [x] Proteção de rotas
-- [x] CRUD de clientes
-- [x] CRUD de serviços
-- [x] Gerenciamento de agendamentos
-- [x] Integração frontend ↔ backend
-- [x] Validações de entrada
-- [x] CORS
-- [x] Dependências com versões fixadas
-- [x] Revisão técnica do backend
-- [ ] Polimento visual do frontend
-- [ ] Melhorias de UX
-- [ ] Revisão de responsividade
-- [ ] Testes finais do frontend
-- [ ] Preparação para produção
-- [ ] Deploy
-- [ ] Publicação do MVP
+| Camada | Tecnologias |
+| --- | --- |
+| Frontend | React 19, TypeScript, Vite, React Router, Axios e CSS com design tokens |
+| Backend | Python 3, FastAPI, SQLAlchemy, Alembic, Pydantic Settings e Uvicorn |
+| Segurança | JWT (`python-jose`), hash de senha com passlib/bcrypt e CORS configurável |
+| Banco de dados | PostgreSQL (com `psycopg2-binary`) |
+| Infraestrutura | Docker e Docker Compose |
+| Qualidade | Pytest, TypeScript e Oxlint |
 
----
+## 🏗️ Arquitetura
 
-## Preparação para deploy
+```text
+React + TypeScript
+        ↓ Axios
+FastAPI (routers por domínio)
+        ↓
+Services (regras de negócio)
+        ↓ SQLAlchemy
+PostgreSQL
+```
 
-O repositório não contém segredos. Antes de publicar, configure as variáveis de ambiente na plataforma escolhida:
+O backend é organizado por domínio em `auth`, `clients`, `services`, `appointments` e `dashboard`. Cada domínio separa router, schema, service e, quando necessário, model. As migrations do banco são mantidas pelo Alembic.
 
-- Backend: `DATABASE_URL`, `SECRET_KEY` (uma chave longa e exclusiva) e `CORS_ORIGINS` com a URL HTTPS exata do frontend.
-- Frontend: `VITE_API_URL` com a URL pública HTTPS da API. Essa variável é incorporada no build; alterá-la exige um novo build/deploy do frontend.
-- PostgreSQL: use uma instância gerenciada ou configure o banco com backup, credenciais próprias e SSL quando exigido pelo provedor.
+## 📁 Estrutura do projeto
 
-O `backend/Dockerfile` é o runtime de produção: inicia como usuário sem privilégios, aplica `alembic upgrade head` e então sobe o Uvicorn. O `docker-compose.yml` continua sendo voltado ao desenvolvimento local, com volume montado e `--reload`.
+```text
+workzen/
+├── backend/
+│   ├── alembic/
+│   │   └── versions/
+│   ├── app/
+│   │   ├── appointments/
+│   │   ├── auth/
+│   │   ├── clients/
+│   │   ├── dashboard/
+│   │   ├── services/
+│   │   ├── config.py
+│   │   ├── database.py
+│   │   └── main.py
+│   ├── tests/
+│   ├── Dockerfile
+│   ├── entrypoint.sh
+│   ├── requirements.txt
+│   └── alembic.ini
+├── frontend/
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── context/
+│   │   └── pages/
+│   ├── .env.example
+│   ├── package.json
+│   └── vite.config.ts
+├── .env.example
+├── docker-compose.yml
+└── README.md
+```
 
-Para executar somente a API no runtime de produção, com um PostgreSQL já acessível, construa a imagem a partir da raiz do repositório e forneça as variáveis de ambiente necessárias:
+## 🚀 Como executar
+
+### Pré-requisitos
+
+- Docker Desktop com Docker Compose.
+- Node.js compatível com o Vite para executar o frontend.
+- Python 3.12, caso queira executar o backend fora do Docker.
+
+### 1. Configure as variáveis locais
+
+Crie os dois arquivos de ambiente a partir dos exemplos:
+
+```bash
+cp .env.example .env
+cp frontend/.env.example frontend/.env
+```
+
+No Windows PowerShell, o equivalente é:
+
+```powershell
+Copy-Item .env.example .env
+Copy-Item frontend/.env.example frontend/.env
+```
+
+Os valores de exemplo já configuram a comunicação local entre Docker, API e Vite. Antes de usar fora do ambiente local, substitua as credenciais e URLs pelos valores do ambiente correspondente.
+
+### 2. Inicie PostgreSQL e API com Docker Compose
+
+```bash
+docker compose up --build
+```
+
+O Compose deste repositório é voltado ao desenvolvimento: monta o código do backend e executa o Uvicorn com `--reload`. Em outro terminal, aplique as migrations:
+
+```bash
+docker compose exec backend alembic upgrade head
+```
+
+A API fica disponível em `http://localhost:8000`. Verifique a prontidão em:
+
+```text
+GET http://localhost:8000/health
+```
+
+### 3. Inicie o frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+O Vite informa no terminal a URL local, normalmente `http://localhost:5173`.
+
+### Backend fora do Docker (opcional)
+
+Com um PostgreSQL acessível e o `.env` da raiz configurado:
+
+```bash
+cd backend
+python -m venv .venv
+# Ative o ambiente virtual conforme seu sistema operacional
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --reload
+```
+
+## 🔐 Variáveis de ambiente
+
+O backend lê o arquivo `.env` da raiz do repositório. O frontend usa `frontend/.env` no desenvolvimento e incorpora `VITE_API_URL` durante o build.
+
+| Variável | Uso | Obrigatória |
+| --- | --- | --- |
+| `DATABASE_URL` | URL de conexão SQLAlchemy/PostgreSQL | Sim, backend |
+| `POSTGRES_USER` | Usuário do PostgreSQL do Docker Compose | Sim, Compose |
+| `POSTGRES_PASSWORD` | Senha do PostgreSQL do Docker Compose | Sim, Compose |
+| `POSTGRES_DB` | Nome do banco do Docker Compose | Sim, Compose |
+| `SECRET_KEY` | Assinatura dos tokens JWT | Sim, backend |
+| `CORS_ORIGINS` | Origens permitidas, separadas por vírgula | Sim, backend |
+| `VITE_API_URL` | URL base pública da API no frontend | Sim, frontend |
+| `ALGORITHM` | Algoritmo JWT; padrão `HS256` | Não |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Duração do token; padrão `60` | Não |
+
+Nunca versione `.env` nem use valores de exemplo em produção. `CORS_ORIGINS` exige origens explícitas; o curinga `*` não é aceito.
+
+## 🧪 Testes e qualidade
+
+A suíte backend possui **66 testes coletados**, cobrindo autenticação, validações, isolamento por usuário, clientes, serviços, agenda, conflitos de horário, dashboard, configuração e health check.
+
+Com o Compose em execução:
+
+```bash
+docker compose exec backend pytest
+```
+
+Ou com o ambiente Python local configurado:
+
+```bash
+cd backend
+pytest
+```
+
+Para o frontend:
+
+```bash
+cd frontend
+npm run lint
+npm run build
+```
+
+O comando de build também executa a verificação de tipos (`tsc -b`) antes de gerar `frontend/dist`.
+
+## 🐳 Docker e runtime de produção
+
+O `backend/Dockerfile` é destinado ao runtime da API em produção. A imagem instala as dependências, executa como usuário sem privilégios e, no `entrypoint.sh`, aplica `alembic upgrade head` antes de iniciar o Uvicorn.
+
+Com um PostgreSQL já disponível para o container, construa e execute a API assim:
 
 ```bash
 docker build -t workzen-api ./backend
 docker run --rm -p 8000:8000 --env-file .env workzen-api
 ```
 
-Nesse caso, `DATABASE_URL` deve apontar para o PostgreSQL disponível para o container. Não use este comando como substituto do `docker-compose.yml`, que permanece a opção para desenvolvimento local.
+Nesse cenário, `DATABASE_URL` deve apontar para o PostgreSQL acessível pelo container. O Dockerfile entrega apenas o runtime da API; o repositório não contém configuração de hospedagem estática para o build do frontend.
 
-Após provisionar o banco, verifique `GET /health`. O endpoint só responde `200` quando a API também consegue consultar o banco; em caso de indisponibilidade responde `503` sem revelar detalhes internos.
+## 🔒 Segurança
 
----
+Os mecanismos presentes no projeto incluem:
 
-# 🏗️ Stack
+- Autenticação por JWT e expiração configurável do token.
+- Senhas armazenadas como hash usando passlib/bcrypt.
+- Dependências de autenticação e filtros por `user_id` para isolar dados entre contas.
+- CORS configurado por ambiente com origens explícitas.
+- Segredos e URLs de conexão obtidos por variáveis de ambiente.
+- Health check que consulta o banco antes de retornar sucesso e não expõe o erro interno de conexão.
 
-## Backend
+## 📱 Responsividade e acessibilidade
 
-- Python
-- FastAPI
-- SQLAlchemy
-- Alembic
-- PostgreSQL
-- JWT
-- Docker
-- Docker Compose
-- Pytest
+- Layout responsivo para desktop e mobile, incluindo sidebar adaptável e controles de gestão em coluna em telas pequenas.
+- Tema Dark/Light persistido em `localStorage`, com transições que respeitam `prefers-reduced-motion`.
+- Estados de foco visível, feedback de carregamento e mensagens de erro acessíveis.
+- Diálogos com `Escape`, foco inicial, retenção de foco por `Tab` e restauração do foco anterior.
+- Controles de seleção expõem seu estado com atributos ARIA; ícones decorativos são ocultados de leitores de tela.
 
-## Frontend
+## 📌 Status do projeto
 
-- React
-- TypeScript
-- Vite
-- React Router
-- CSS
+O MVP está implementado e preparado para iniciar o deploy. O repositório não está em produção e ainda requer a configuração da infraestrutura, domínio e variáveis de ambiente da plataforma escolhida.
 
----
+## 🗺️ Próximos passos
 
-# 📁 Estrutura
+As possibilidades abaixo são ideias futuras e **não fazem parte da versão atual**:
 
-```text
-WORKZEN/
-│
-├── backend/
-│   ├── app/
-│   │   ├── appointments/
-│   │   ├── clients/
-│   │   ├── services/
-│   │   ├── auth/
-│   │   ├── dashboard/
-│   │   ├── config.py
-│   │   ├── database.py
-│   │   └── main.py
-│   │
-│   ├── tests/
-│   ├── alembic/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── alembic.ini
-│
-├── frontend/
-│   ├── src/
-│   │   ├── api/
-│   │   ├── components/
-│   │   ├── context/
-│   │   ├── pages/
-│   │   ├── types/
-│   │   ├── assets/
-│   │   ├── App.tsx
-│   │   ├── App.css
-│   │   ├── index.css
-│   │   └── main.tsx
-│   │
-│   ├── public/
-│   ├── package.json
-│   └── vite.config.ts
-│
-├── docker-compose.yml
-├── .gitignore
-└── README.md
-```
+- Notificações e lembretes.
+- Integração com WhatsApp.
+- Página pública de agendamento.
+- Múltiplos profissionais ou equipes.
+- Relatórios avançados.
+- Pagamentos online.
 
----
+## 👨‍💻 Autor
 
-# ⚙️ Backend
-
-O backend é responsável pela API, autenticação, regras de negócio e persistência dos dados.
-
-### Principais módulos
-
-### Authentication
-
-Sistema de autenticação utilizando JWT.
-
-Fluxo atual:
-
-```text
-Cadastro
-   ↓
-Login
-   ↓
-JWT
-   ↓
-Frontend
-   ↓
-Authorization: Bearer <token>
-```
-
-### Clients
-
-Gerenciamento de clientes vinculados ao usuário autenticado.
-
-Operações principais:
-
-- Listar
-- Criar
-- Atualizar
-- Desativar
-
-### Services
-
-Gerenciamento dos serviços oferecidos pelo prestador.
-
-Informações principais:
-
-- Nome
-- Preço
-- Duração
-- Status
-
-### Appointments
-
-Gerenciamento dos agendamentos.
-
-Informações principais:
-
-- Cliente
-- Serviço
-- Data/hora
-- Valor cobrado
-- Status
-- Status do pagamento
-
-O cancelamento possui uma rota específica e as transições de status são controladas pelo backend.
-
-### Dashboard
-
-O backend fornece informações utilizadas pelo dashboard, incluindo:
-
-- Clientes ativos
-- Serviços ativos
-- Agendamentos do dia
-- Próximos agendamentos
-- Agendamentos concluídos
-- Agendamentos cancelados
-- Faturamento total
-- Faturamento do mês
-
----
-
-# 🖥️ Frontend
-
-O frontend foi construído com React + TypeScript e atualmente já está integrado ao backend.
-
-### Telas implementadas
-
-- Login
-- Cadastro
-- Dashboard
-- Clientes
-- Serviços
-- Agendamentos
-
-### Autenticação
-
-O frontend possui:
-
-- `AuthContext`
-- armazenamento do JWT
-- proteção de rotas
-- logout
-- tratamento de sessão
-- envio automático do token nas requisições
-
----
-
-# 🧪 Testes
-
-A API possui testes automatizados utilizando Pytest.
-
-Na última validação:
-
-```text
-39 passed
-3 warnings
-```
-
-Os testes cobrem, entre outros pontos:
-
-- autenticação;
-- clientes;
-- serviços;
-- agendamentos;
-- dashboard;
-- validações de entrada;
-- regras de status dos agendamentos.
-
-Os warnings existentes não estão relacionados às últimas alterações.
-
----
-
-# 🔐 Segurança e qualidade
-
-Durante a revisão técnica do backend foram corrigidos pontos importantes:
-
-- [x] Rotação do `SECRET_KEY`
-- [x] `.env` removido do rastreamento atual do Git
-- [x] `.venv` removido do rastreamento
-- [x] `.gitignore` atualizado
-- [x] CORS configurado
-- [x] Dependências diretas com versões fixadas
-- [x] Validações de entrada adicionadas
-- [x] Transições de status de agendamento restringidas
-
-> O histórico antigo do Git não foi reescrito após a rotação do secret. A chave comprometida foi invalidada.
-
----
-
-# 📌 Decisões importantes
-
-### Status de agendamento
-
-O `PUT /appointments/{id}` não deve ser utilizado para alterar livremente o status do agendamento.
-
-Atualmente:
-
-```text
-scheduled
-    │
-    └──→ canceled
-```
-
-O cancelamento utiliza uma rota específica.
-
-A funcionalidade de marcar um agendamento como `completed` ainda não foi implementada e está registrada como possível evolução futura.
-
----
-
-# 🚀 Roadmap
-
-## Fase 1 — Fundação
-
-- [x] Estrutura do monorepo
-- [x] Docker
-- [x] PostgreSQL
-- [x] FastAPI
-- [x] SQLAlchemy
-- [x] Alembic
-- [x] Configuração de ambiente
-
-## Fase 2 — Backend
-
-- [x] Autenticação
-- [x] Clientes
-- [x] Serviços
-- [x] Agendamentos
-- [x] Dashboard
-- [x] Validações
-- [x] CORS
-- [x] Revisão técnica
-- [x] Testes automatizados
-
-## Fase 3 — Frontend
-
-- [x] React + TypeScript + Vite
-- [x] Sistema de rotas
-- [x] Autenticação
-- [x] Dashboard
-- [x] Clientes
-- [x] Serviços
-- [x] Agendamentos
-- [x] Integração com API
-
-## Fase 4 — Polimento
-
-- [ ] Design system
-- [ ] Responsividade
-- [ ] Loading states
-- [ ] Empty states
-- [ ] Mensagens de erro
-- [ ] Feedback de sucesso
-- [ ] Melhorias de formulários
-- [ ] Acessibilidade básica
-- [ ] Revisão geral de UX
-
-## Fase 5 — Produção
-
-- [ ] Revisão final
-- [ ] Configuração de ambiente de produção
-- [ ] Deploy do backend
-- [ ] Deploy do frontend
-- [ ] Banco PostgreSQL em produção
-- [ ] Configuração de domínio
-- [ ] HTTPS
-- [ ] Testes em produção
-- [ ] Publicação do MVP
-
----
-
-# 🎯 Objetivo do MVP
-
-A primeira versão do WorkZen deve permitir que um prestador:
-
-```text
-Criar conta
-    ↓
-Fazer login
-    ↓
-Cadastrar clientes
-    ↓
-Cadastrar serviços
-    ↓
-Criar agendamentos
-    ↓
-Acompanhar os agendamentos
-    ↓
-Gerenciar sua operação pelo Dashboard
-```
-
----
-
-# 🔮 Próximas evoluções
-
-Após o MVP, algumas funcionalidades poderão ser avaliadas:
-
-- Marcar agendamento como concluído
-- Calendário visual
-- Notificações
-- Lembretes de agendamento
-- Integração com WhatsApp
-- Relatórios
-- Mais métricas no Dashboard
-- Configurações do estabelecimento
-- Página pública de agendamento
-- Multiusuário/equipe
-- Planos pagos
-
-Essas funcionalidades **não fazem parte da primeira versão** e só serão consideradas depois que o MVP estiver estável.
-
----
-
-## 📈 Momento atual
-
-**WorkZen está com o núcleo funcional implementado.**
-
-O próximo objetivo é deixar o frontend mais refinado, consistente e responsivo antes de partir para a preparação do ambiente de produção e o deploy.
-
-> **Status atual: MVP funcional → Polimento → Produção**
+Danilo Machado
