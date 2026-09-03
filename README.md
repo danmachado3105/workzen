@@ -4,6 +4,12 @@
 
 O WorkZen é um MVP SaaS para profissionais que atendem por horário. Ele centraliza clientes, serviços, agenda e o acompanhamento de pagamentos em uma interface web responsiva, com API própria e banco PostgreSQL.
 
+## 🎬 Preview
+
+Uma pequena demonstração do **Workzen** em funcionamento:
+
+https://github.com/user-attachments/assets/e88184b2-71d9-473c-98e4-8d5089c958d4
+
 ## ✨ Funcionalidades
 
 - Cadastro, login, logout e sessão autenticada com JWT.
